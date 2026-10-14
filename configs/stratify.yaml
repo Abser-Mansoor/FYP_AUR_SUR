@@ -1,0 +1,58 @@
+# Phase 2 (Task 4): luminance and low-sharpness stratification. Inference only.
+# Reproduce:  envs/diag/Scripts/python.exe scripts/run_stratify.py --config configs/stratify.yaml
+seed: 42
+device: cuda
+batch_size: 256
+decode_threads: 16
+
+paths:
+  survface: Dataset/QMUL-SurvFace-v1/QMUL-SurvFace
+  tinyface: Dataset/tinyface/tinyface
+  phase1: outputs/results/phase1/per_sample
+  out: outputs/stratify
+
+recognizers:
+  arcface: models/weights/arcface_iresnet100.pth
+  adaface: models/weights/adaface_ir101_ms1mv2.ckpt
+  magface: models/weights/magface_iresnet100_MS1MV2.pth
+  curricularface: models/weights/CurricularFace_Backbone.pth
+
+# Splits that are measured: (dataset, split). Binning is done per split.
+splits:
+  - [tinyface, probe]
+  - [tinyface, gallery_match]
+  - [tinyface, distractor]
+  - [survface, gallery]
+  - [survface, mated_probe]
+  - [survface, unmated_probe]
+  - [survface, verification]
+# MagFace feature norm (third sharpness/quality measure) is computed for these only.
+magface_norm_splits:
+  - [tinyface, probe]
+  - [survface, mated_probe]
+  - [survface, unmated_probe]
+  - [survface, verification]
+
+measures:
+  lap_size: 112          # every crop is resized to this (bilinear) before Laplacian variance
+  fft_cutoff: 0.5        # high-frequency = radial frequency above this fraction of Nyquist, native resolution
+  magface_norm_flip: false
+
+bins:
+  threshold_scope: split   # split = each split's own quantiles; dataset = pooled per dataset
+  dark_quantile: 0.20      # darkest 20% of the observed luminance distribution
+  low_sharp_quantile: 0.20 # lowest 20% of Laplacian variance
+  sharp_quantile: 0.20     # top 20%, used only for the sharp-vs-low comparison
+  n_quantiles: 5           # quintiles for trend plots
+  dark_quantile_strict: 0.10 # stricter dark bin (darkest 10%) for low-light work
+  size_groups: 3           # native-size groups inside which sharpness is ranked (size-controlled bin)
+
+validation:
+  bootstrap_n: 1000
+  bootstrap_seed: 42
+  random_baseline_draws: 1000
+  contact_sheet_n: 50
+  min_dark_n: 300          # dark bin flagged if fewer queries than this
+  max_ci_halfwidth: 0.05   # ... or if the headline metric CI half-width exceeds this
+  max_dark_luminance: 80   # ... or if the dark bin's upper luminance bound exceeds this (0-255)
+  size_tertiles: 3

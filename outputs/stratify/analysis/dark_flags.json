@@ -1,0 +1,82 @@
+{
+  "tinyface/probe": {
+    "n_dark": 745,
+    "dark_luminance_range": [
+      11.1943359375,
+      83.2490234375
+    ],
+    "flag_small": false,
+    "flag_not_dark": true
+  },
+  "tinyface/gallery_match": {
+    "n_dark": 888,
+    "dark_luminance_range": [
+      9.433467741935484,
+      83.5625
+    ],
+    "flag_small": false,
+    "flag_not_dark": true
+  },
+  "tinyface/distractor": {
+    "n_dark": 30685,
+    "dark_luminance_range": [
+      0.896969696969697,
+      63.77948717948718
+    ],
+    "flag_small": false,
+    "flag_not_dark": false
+  },
+  "survface/gallery": {
+    "n_dark": 12058,
+    "dark_luminance_range": [
+      14.989553656220323,
+      72.48875
+    ],
+    "flag_small": false,
+    "flag_not_dark": false
+  },
+  "survface/mated_probe": {
+    "n_dark": 12084,
+    "dark_luminance_range": [
+      13.147826086956522,
+      74.82371794871794
+    ],
+    "flag_small": false,
+    "flag_not_dark": false
+  },
+  "survface/unmated_probe": {
+    "n_dark": 24347,
+    "dark_luminance_range": [
+      5.035353535353536,
+      74.17619047619047
+    ],
+    "flag_small": false,
+    "flag_not_dark": false
+  },
+  "survface/verification": {
+    "n_dark": 1982,
+    "dark_luminance_range": [
+      21.12925170068027,
+      64.56547619047619
+    ],
+    "flag_small": false,
+    "flag_not_dark": false
+  },
+  "_ci": {
+    "tinyface": {
+      "metric": "Rank-1",
+      "max_halfwidth": 0.02953020134228189,
+      "flag_wide_ci": false
+    },
+    "survface_openset": {
+      "metric": "TPIR20@FPIR=0.3",
+      "max_halfwidth": 0.0030639688844753387,
+      "flag_wide_ci": false
+    },
+    "survface_verification": {
+      "metric": "AUC",
+      "max_halfwidth": 0.019181124335431066,
+      "flag_wide_ci": false
+    }
+  }
+}

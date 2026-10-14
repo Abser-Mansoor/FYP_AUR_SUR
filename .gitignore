@@ -1,0 +1,37 @@
+# large / licensed / local
+/Dataset/
+/data/
+/models/
+/envs/
+/.agents/
+
+# generated outputs: ignore everything, then allow the small reproducible parts
+/outputs/*
+!/outputs/results/
+!/outputs/figures/
+!/outputs/stratify/
+/outputs/stratify/measures/
+!/outputs/sr/
+/outputs/sr/*
+!/outputs/sr/results/
+!/outputs/sr/subset/
+/outputs/sr/subset/*_input/
+!/outputs/sr/failure_cases/
+
+# anywhere
+__pycache__/
+*.pyc
+*.tmp
+.ipynb_checkpoints/
+desktop.ini
+.score_lock/
+*.log
+*.npy
+*.npz
+!/outputs/results/phase1/per_sample/*.npz
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+*.pkl
+*.bin

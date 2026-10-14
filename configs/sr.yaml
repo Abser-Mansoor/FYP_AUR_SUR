@@ -1,0 +1,64 @@
+# Phase 3 (Task 1): SR / face-restoration arms. Inference only.
+seed: 42
+paths:
+  survface: Dataset/QMUL-SurvFace-v1/QMUL-SurvFace
+  tinyface: Dataset/tinyface/tinyface
+  bins: outputs/stratify/bins
+  out: outputs/sr
+
+# One fixed, seeded, identity-stratified subset shared by EVERY arm and every variant.
+subset:
+  seed: 42
+  tuning:   # disjoint identities; hyperparameters are chosen here only
+    tinyface_identities: 50
+    tinyface_distractors: 500
+    survface_identities: 25
+    survface_unmated: 500
+    survface_ver_pairs: 150      # positive; same number negative
+  eval:
+    tinyface_identities: 800
+    tinyface_distractors: 4000
+    survface_identities: 200
+    survface_unmated: 4000
+    survface_ver_pairs: 1000
+
+# apply the restoration to both probe and gallery images (restore_gallery: false = probes only)
+restore_gallery: true
+
+recognizers:
+  arcface: models/weights/arcface_iresnet100.pth
+  adaface: models/weights/adaface_ir101_ms1mv2.ckpt
+  magface: models/weights/magface_iresnet100_MS1MV2.pth
+  curricularface: models/weights/CurricularFace_Backbone.pth
+
+bootstrap: {tuning_n: 200, eval_n: 1000, seed: 42}
+
+# python / runner per arm (each in its own venv). Deterministic arms use seed 0 only.
+arms:
+  bicubic:  {python: envs/diag/Scripts/python.exe,       runner: src/sr/run_bicubic.py,    stochastic: false}
+  esrgan:   {python: envs/realesrgan/Scripts/python.exe, runner: src/sr/run_realesrgan.py, stochastic: false}
+  invsr:    {python: envs/invsr/Scripts/python.exe,      runner: src/sr/run_invsr.py,      stochastic: true}
+  tadsr:    {python: envs/tadsr/Scripts/python.exe,      runner: src/sr/run_tadsr.py,      stochastic: true}
+  osdface:  {python: envs/osdface/Scripts/python.exe,    runner: src/sr/run_osdface.py,    stochastic: true}
+
+# Tuning sweep; settings are chosen on the tuning subset only. Selection rule: highest mean over the NON-LEAKY
+# recognizers (adaface, magface, curricularface) of [TinyFace Rank-1, SurvFace verification AUC].
+tuning_variants:
+  - {arm: bicubic, pre: 128}
+  - {arm: bicubic, pre: 512}
+  - {arm: esrgan,  pre: 0}
+  - {arm: esrgan,  pre: 64}
+  - {arm: esrgan,  pre: 128}
+  - {arm: invsr,   pre: 64,  steps: 1}
+  - {arm: invsr,   pre: 128, steps: 1}
+  - {arm: invsr,   pre: 256, steps: 1}
+  - {arm: invsr,   pre: 128, steps: 3}
+  - {arm: invsr,   pre: 128, steps: 5}
+  - {arm: tadsr,   pre: 64,  t: 500}
+  - {arm: tadsr,   pre: 128, t: 500}
+  - {arm: tadsr,   pre: 256, t: 500}
+  - {arm: tadsr,   pre: 128, t: 250}
+  - {arm: tadsr,   pre: 128, t: 750}
+  - {arm: osdface, pre: 128}
+  - {arm: osdface, pre: 512}
+osdface_sd_path: models/weights/osdface/sd21base   # ModelScope copy (hash-verified identical to the mirror)

@@ -1,0 +1,45 @@
+# Phase 1 (Task 0): direct-feed baseline. Inference only.
+# Reproduce:  envs/diag/Scripts/python.exe scripts/run_baseline.py --config configs/baseline.yaml
+seed: 42
+device: cuda
+deterministic: true      # cudnn.deterministic, benchmark off
+tf32: true               # TF32 tensor cores for conv/matmul (PyTorch's default for cuDNN convs)
+batch_size: 256
+num_workers: 0           # image decoding uses threads, no DataLoader workers
+decode_threads: 16
+
+paths:
+  survface: Dataset/QMUL-SurvFace-v1/QMUL-SurvFace
+  tinyface: Dataset/tinyface/tinyface
+  detector: models/detector/det_10g.onnx
+  cache: outputs/cache/phase1
+  results: outputs/results/phase1
+
+# Tiny-crop protocol: one rule for every recognizer and every restoration variant.
+# Channel order / normalization are each model's official convention (src/models/OFFICIAL).
+preprocess:
+  input_size: [112, 112]
+  interp: bilinear       # cv2.INTER_LINEAR: the cv2.resize default used by the insightface/AdaFace pipelines
+  flip: true             # sum of embeddings of the crop and its horizontal flip
+
+recognizers:
+  arcface: models/weights/arcface_iresnet100.pth
+  adaface: models/weights/adaface_ir101_ms1mv2.ckpt
+  magface: models/weights/magface_iresnet100_MS1MV2.pth
+  curricularface: models/weights/CurricularFace_Backbone.pth
+
+datasets: [tinyface, survface]
+
+metrics:
+  bootstrap_n: 1000
+  bootstrap_seed: 42
+
+sanity:
+  shuffled_label_seed: 7   # determinism check re-embeds the first batch_size TinyFace probes
+
+# Diagnostic arm (NOT the baseline): 5-point alignment on TinyFace, used only to
+# explain the gap to published numbers, which use aligned crops.
+diagnostics:
+  aligned_tinyface: true
+  align_lowres_side: 112
+  align_det_thresh: 0.3
