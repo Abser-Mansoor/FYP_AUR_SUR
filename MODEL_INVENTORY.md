@@ -1,6 +1,6 @@
 # MODEL_INVENTORY
 
-Last updated 2026-10-08 (Phase 3 smoke tests). One venv per model under `envs/`; weights under `models/weights/` (SR models) and `models/<repo>/preset/weights` (TADSR). All SHA-256 values are 16-character prefixes of the file hash.
+Last updated 2026-10-15 (Phase 3 complete; see `REPORT_phase3.md`). One venv per model under `envs/`; weights under `models/weights/` (SR models) and `models/<repo>/preset/weights` (TADSR). All SHA-256 values are 16-character prefixes of the file hash.
 
 ## 1. Face recognizers (Phase 0/1; unchanged)
 | Model | Backbone | Weights file | Training data | Pre-processing (Phase 1) | Notes |
@@ -13,18 +13,26 @@ Last updated 2026-10-08 (Phase 3 smoke tests). One venv per model under `envs/`;
 
 ## 2. SR / face-restoration arms (Phase 3)
 ### 2.1 Summary
-| Arm | Go / no-go | Seconds per crop (smoke median) | Peak VRAM | Runs natively on Windows | Output on tiny crops |
-|---|---|---|---|---|---|
-| Direct feed (resize only) | go (baseline) | - | - | yes | the Phase 1 baseline |
-| Bicubic | go (baseline) | < 0.01 | 0 | yes | smooth, no new detail |
-| Real-ESRGAN x4plus | **go** | 0.06-0.07 | 0.1-0.2 GB | yes (RRDBNet vendored) | native input: strong invented texture; pre-upsampled: near-bicubic |
-| InvSR | **go, with caveats** | 0.12 (pre64) / 0.24 (pre128, 1 step) / 0.42 (pre128, 5 steps) / 1.14 (pre256) | 2.8-5.1 GB | yes | pre128: halftone/lattice patterns and coloured blobs on blurry crops; pre64: invents faces; pre256: cleanest, little added detail |
-| TADSR | **go, with caveats** | 0.26 (pre64) / 0.47 (pre128) / 1.63 (pre256) | 3.6-5.9 GB | yes (one upstream bug worked around, section 2.3) | pre128/256 conservative, no artifacts; pre64: invents scenes and faces |
-| OSDFace | **go, with a leakage flag** | 0.50 (all pre-sizes) | 4.0 GB (fp32) | yes | always draws a full confident face, even from non-face crops; barely depends on pre-size |
-| CodeFormer / GFPGAN | not attempted (optional) | - | - | - | only if time allows |
-Not attempted by instruction: DreamSR, FluxSR, ID-CDM, FideDiff.
+Technical go / no-go means: official weights exist and the model runs natively. The recognition verdict is a judgement from `REPORT_phase3.md` (evaluation subset of 22,898 crops, all four recognizers).
 
-Smoke test: 75 seeded crops (25 TinyFace probes, 25 SurvFace mated queries, 25 SurvFace verification images; a third from the size-controlled low-sharpness bin, a third from the darkest 10%), `outputs/sr/smoke/`. 0 failures in every setting listed. Montages: `outputs/sr/smoke/montage_*.png`.
+| Arm | Technical go / no-go | Selected setting | Isolated speed, PC (s/crop median) | Peak VRAM | Recognition verdict |
+|---|---|---|---|---|---|
+| Direct feed (resize only) | baseline | - | - | - | reference |
+| Bicubic | go | pre-512 | about 0.014 (mean, mostly file I/O) | 0 | equivalent to direct feed |
+| Real-ESRGAN x4plus | go | native input | 0.028 | 0.1 GB | no benefit; harms ArcFace, MagFace and open-set |
+| InvSR | go | pre-64, 1 step (rule-selected); pre-128 checked | 0.076 (pre-64) / 0.269 (pre-128) | 2.8 / 3.2 GB | harmful at both settings |
+| TADSR | go | pre-128, timestep 250 | 0.363 | 4.1 GB | marginal: TinyFace gain for 2 of 4 recognizers only |
+| OSDFace | go, ArcFace leaky | pre-128 | 0.515 | 4.0 GB (fp32) | best TinyFace accuracy only with identical restoration of probe and gallery; invents identities |
+| CodeFormer / GFPGAN | not attempted (optional) | - | - | - | - |
+Not attempted by instruction: DreamSR, FluxSR, ID-CDM, FideDiff. All models ran natively on Windows (no WSL2); OSDFace and InvSR pre-128 evaluation also ran on Linux Colab T4s.
+
+Speeds on a Colab T4 (75-crop cross-device check): OSDFace 1.39 s/crop, InvSR pre-128 0.51 s/crop. Smoke test (75 seeded crops): 0 failures in every setting; montages in `outputs/sr/smoke/`.
+
+### 2.1b Remote (Colab) execution
+- Environment per job: Python 3.10 uv venv, torch 2.6.0+cu124 and the PC venv's pinned packages (`bundle/locks/*.txt`), repos at the commits in 2.2, weights from the same official sources with SHA-256 checks against the PC's files.
+- Each Colab ran a cross-device check before its job: direct-feed embeddings matched the PC to about 1e-6 (max |delta cos|), restored smoke crops matched to pixel difference 0.04-0.05 of 255 and embedding cosine 0.9999; all passed.
+- Jobs ran in 1,000-crop chunks, embeddings were computed on the Colab, and only embeddings, thumbnails and timings were returned (merge: `scripts/sr_colab_merge.py`, which rejects any gap, overlap or wrong order). Full-size outputs for those jobs were not copied.
+- Devices per reported result: OSDFace (tuning, evaluation, seeds): Colab T4 only. InvSR pre-128 evaluation: Colab T4. All other arms: lab PC.
 
 ### 2.2 Repos, versions and weights
 | Model | Repo / commit / date | Environment | Weights (source, size, sha256 prefix) |

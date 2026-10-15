@@ -1,0 +1,7 @@
+arm,setting,n_crops,n_timed,device,returncode,peak_vram_mb,n_failed,sec_per_crop_mean,note,sec_per_crop_median,sec_per_crop_p90
+bicubic,pre512,200,0,NVIDIA RTX 4000 Ada Generation,0,0.0,,0.013860037499998725,mean over all crops incl. file I/O; no per-crop list,,
+esrgan,native,200,195,NVIDIA RTX 4000 Ada Generation,0,100.7,0.0,0.02950461538461538,,0.0283,0.03236
+invsr,pre64_st1,200,195,NVIDIA RTX 4000 Ada Generation,0,2770.5,0.0,0.10081384615384616,,0.0761,0.16338
+tadsr,pre128_t250,200,195,NVIDIA RTX 4000 Ada Generation,0,4098.5,0.0,0.428034358974359,,0.363,0.59954
+osdface,pre128,200,195,NVIDIA RTX 4000 Ada Generation,0,4030.2,0.0,0.5824810256410257,,0.515,0.6975399999999999
+invsr,pre128_st1,200,195,NVIDIA RTX 4000 Ada Generation,0,3227.1,0.0,0.2697651282051282,,0.2686,0.27992

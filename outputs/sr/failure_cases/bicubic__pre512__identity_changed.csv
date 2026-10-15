@@ -1,0 +1,13 @@
+file,dataset,split,drift_cos
+survface__mated_probe__5178_cam2_1.png,survface,mated_probe,0.65512365
+survface__mated_probe__4363_cam2_1.png,survface,mated_probe,0.6987303
+survface__mated_probe__5402_cam2_8.png,survface,mated_probe,0.7445677
+survface__mated_probe__5402_cam2_35.png,survface,mated_probe,0.7498031
+survface__mated_probe__8330_cam1_5.png,survface,mated_probe,0.76197416
+survface__mated_probe__5402_cam2_6.png,survface,mated_probe,0.763851
+survface__mated_probe__5387_cam1_56.png,survface,mated_probe,0.76666874
+survface__mated_probe__9155_cam3_11.png,survface,mated_probe,0.76690036
+survface__mated_probe__5387_cam1_16.png,survface,mated_probe,0.7678089
+survface__mated_probe__8971_cam1_58.png,survface,mated_probe,0.7741255
+survface__mated_probe__5402_cam2_4.png,survface,mated_probe,0.78108865
+survface__mated_probe__5402_cam2_14.png,survface,mated_probe,0.78215104
