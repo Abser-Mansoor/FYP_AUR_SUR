@@ -1,0 +1,47 @@
+# Phase 5 (video foundations): detector size study. Inference only.
+# Reproduce on a Colab T4 (see colab/phase5_detector_colab.ipynb) or the lab PC:
+#   envs/video/Scripts/python.exe scripts/video_detector_study.py --job all
+seed: 42
+
+paths:
+  wider: Dataset/WIDER_FACE
+  chokepoint: Dataset/ChokePoint
+  chokepoint_sample: outputs/video/chokepoint_sample
+  gt: outputs/video/gt
+  eval_crops: outputs/sr/subset/eval_input        # TinyFace / SurvFace eval subset crops (Phase 3), file names in eval_images.csv
+  eval_images: outputs/sr/subset/eval_images.csv
+  out: outputs/video/detstudy
+
+detectors:
+  scrfd: models/detector/det_10g.onnx
+  retinaface: models/detector/retinaface/Resnet50_Final.pth
+
+# modes: full640 = longest side 640 (SCRFD's published operating point); full1280 = frame upscaled to 1280;
+# tiled = 2x2 tiles, 20% overlap, each at 640, merged with NMS 0.4
+modes: [full640, full1280, tiled]
+detect_thresh: 0.02          # detectors keep everything above this; scoring applies its own threshold
+score_thresholds: [0.5, 0.3] # recall / false positives are reported at both
+nms: 0.4
+iou: 0.5
+
+# face-height bins in px (WIDER and ChokePoint recall)
+bins: [[0, 10], [10, 16], [16, 24], [24, 32], [32, 64], [64, 1000000]]
+
+crops:                       # TinyFace / SurvFace crops: the Phase 1 padded-crop protocol
+  lowres_side: 112
+  thresh: 0.3
+
+chokepoint_sample:
+  n_frames: 1000
+  seed: 42
+
+runtime:                     # median ms per frame at 720p, batch 1
+  n_frames: 100
+  warmup: 10
+  size: [1280, 720]
+
+chunk: 200                   # items per resumable chunk
+
+# Phase 6 detector selection (fixed before the T4 run): highest WIDER recall on the 16-24 and 24-32 px bins at score 0.5,
+# among (detector, mode) with median 720p runtime <= max_ms on the T4; ties within tie_recall go to the faster one.
+selection: {score: 0.5, bins: ["16-24", "24-32"], max_ms: 100, tie_recall: 0.01}

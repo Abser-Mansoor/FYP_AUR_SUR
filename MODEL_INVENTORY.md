@@ -69,3 +69,18 @@ Speeds on a Colab T4 (75-crop cross-device check): OSDFace 1.39 s/crop, InvSR pr
 - Subset config: `configs/sr.yaml`; builder `scripts/sr_build_subset.py`; outputs `outputs/sr/subset/{tuning,eval}_{images,pairs}.csv`. Identity-stratified (strata: tertiles of gallery images per identity), seed 42, tuning and eval share no image or identity.
 - Tuning: 2,800 images (TinyFace 50 identities + 500 distractors; SurvFace 25 identities + 500 unmated queries + 150 positive and 150 negative pairs).
 - Eval: 22,898 images (TinyFace 800 identities: 1,155 probes, 1,373 gallery images, + 4,000 distractors; SurvFace 200 identities: 4,486 gallery, 4,476 mated queries, + 4,000 unmated; 1,000 positive and 1,000 negative verification pairs, 3,408 images).
+
+## 4. Video phase models and vendored code (Phase 5; added 2026-10-22)
+Vendored code provenance (commits, upstream SHA-256, patches) is in `src/video/vendor/VENDOR.md`.
+
+| Item | Source | Version | SHA-256 | Licence | Use |
+|---|---|---|---|---|---|
+| SCRFD det_10g | insightface buffalo_l | `models/detector/det_10g.onnx` | 5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91 | insightface model zoo terms (not re-checked) | detector (Phase 1 alignment, Phase 5 study) |
+| RetinaFace ResNet-50 | github.com/biubug6/Pytorch_Retinaface, official Google Drive folder | `models/detector/retinaface/Resnet50_Final.pth`; code commit b984b4b775b2c4dced95c1eadd195a5c7d32a60b | 6d1de9c2944f2ccddca5f5e010ea5ae64a39845a86311af6fdf30841b0a5a16d | MIT | detector (Phase 5 study) |
+| ByteTrack | github.com/FoundationVision/ByteTrack | commit d1bf0191adff59bc8fcfeaa0b33d3d1642552a99 | see VENDOR.md | MIT | tracker (Phase 6) |
+| BoT-SORT | github.com/NirAharon/BoT-SORT | commit 251985436d6712aaf682aaaf5f71edb4987224bd | see VENDOR.md | MIT | tracker (Phase 6), re-ID off |
+| SFE-DETR | Sensors 2025 paper (`research/papers/B`) | no code | - | - | **dropped**: the paper gives no code link ("data ... available from the corresponding author upon reasonable request") and the model is trained on SCUT-HEAD, which would need training |
+| CAFace | github.com/mk-minchul/CAFace commit e94ad0206d0a04a098594747138e4da5435f5ec7 | downloaded by `scripts/phase5_fetch_models.py`; hashes in `outputs/video/model_downloads.json` | filled in after download | MIT (repo) | learned aggregator, Phase 7. Trained on an **AdaFace R100 WebFace4M** backbone, not our MS1MV2 AdaFace: its row needs its own single-frame baseline with that backbone |
+| FaceMoE | huggingface.co/kartiknarayan/FaceMoE; code github.com/Kartik-3004/FaceMoE commit f0972d487ed4fe20bce701840e4a3ee2da2f4c4e | two checkpoints (`swin4m_exp_3_k_2_briar_full`, `swin4m_exp_3_k_2_tinyface_full`) | filled in after download | MIT (repo); model licence not stated by the Hugging Face API | optional 5th recognizer; input 120 px, needs its own preprocessing |
+
+Environment `envs/video`: Python 3.13.5 (system Python, `--system-site-packages`), torch 2.14.0+cu126 (system), numpy 2.5.4, onnxruntime-gpu 1.30.0 with the CUDA 13 libraries copied from `envs/diag`, opencv 4.13.0, scipy 1.18.1, pandas 3.0.6, lap 0.5.13, faiss-cpu 1.15.1, gdown 6.4.2. `torch` must be imported before onnxruntime creates a CUDA session (CUDA 13 cuDNN loaded first breaks torch's CUDA 12 cuDNN); `src/video/detect.py` does this.
