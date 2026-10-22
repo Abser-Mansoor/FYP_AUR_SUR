@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Decision Brief after Phase 3</title>
+<style>
+  @page { size: A4; margin: 16mm 17mm 16mm 17mm; }
+  html { background: #fff; }
+  body { font-family: "Times New Roman", Times, serif; font-size: 11pt; line-height: 1.33; color: #111; background: #fff; margin: 0; }
+  h1 { font-size: 19pt; margin: 0 0 2pt 0; }
+  h2 { font-size: 14pt; margin: 16pt 0 5pt 0; border-bottom: 1px solid #999; padding-bottom: 2pt; break-after: avoid; }
+  h3 { font-size: 12pt; margin: 10pt 0 3pt 0; break-after: avoid; }
+  p { margin: 0 0 6pt 0; }
+  ul, ol { margin: 0 0 6pt 0; padding-left: 18pt; }
+  li { margin-bottom: 2pt; }
+  table { border-collapse: collapse; width: 100%; margin: 4pt 0 8pt 0; font-size: 10pt; break-inside: auto; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  th, td { border: 1px solid #888; padding: 3pt 5pt; text-align: left; vertical-align: top; }
+  th { background: #e8e8e8; }
+  td.num { text-align: right; white-space: nowrap; }
+  .meta { font-size: 10.5pt; color: #333; margin-bottom: 10pt; }
+  .box { border: 1px solid #555; background: #f3f3f3; padding: 6pt 9pt; margin: 6pt 0 8pt 0; break-inside: avoid; }
+  .quote { border-left: 3px solid #555; padding: 3pt 9pt; margin: 6pt 0 8pt 0; font-style: italic; break-inside: avoid; }
+  .small { font-size: 9.5pt; color: #333; }
+  .keep { break-inside: avoid; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt; }
+  .fig { border: 1px solid #888; padding: 4pt; break-inside: avoid; }
+  .fig img { width: 100%; display: block; }
+  .fig.wide { grid-column: 1 / -1; }
+  .tags { margin-bottom: 3pt; font-size: 9pt; }
+  .t { display: inline-block; border: 1px solid #555; padding: 0 4pt; margin-right: 4pt; font-weight: bold; }
+  .t.d { background: #dde6f3; } .t.s { background: #f3e3d3; }
+  .prob { font-size: 9pt; margin-top: 3pt; }
+</style>
+</head>
+<body>
+
+<h1>Decision Brief after Phase 3</h1>
+<div class="meta">
+  <strong>Project:</strong> Identity-Preserving Adaptive Surveillance Restoration &amp; Recognition Pipeline (Approach B)<br>
+  <strong>Team:</strong> Muhammad Abser Mansoor (lead), Raghib Rizwan Rabbani, Muhammad Umar<br>
+  <strong>Supervisor:</strong> Dr. Kamran Ali &nbsp;·&nbsp; <strong>Date:</strong> 20 October 2026
+</div>
+
+<h2>1. Summary</h2>
+<p>Phase 3 tested whether diffusion-based super-resolution (SR) improves face recognition on real surveillance crops. It does not, under the conditions we tested. We propose three decisions and ask for your approval.</p>
+<div class="box">
+<ol>
+  <li><strong>Close SR as a completed negative result.</strong> We will not start new SR models, including smaller ones. The claim we will make is deliberately narrow (section 4).</li>
+  <li><strong>Keep restoration in the pipeline as a gated stage that is off by default.</strong> We will run one cheap, one-week test of deblurring and low-light enhancement, using non-generative methods only.</li>
+  <li><strong>Make the working video system the main deliverable for the next 8 weeks:</strong> detection, alignment, recognition, retrieval, tracking, and identity matching per track. All of these are already in the proposal's scope (BoT-SORT, FAISS/HNSW, deliverable 1). This changes priorities, not the project.</li>
+</ol>
+</div>
+<p>Decision 2 and the start of decision 3 run in parallel in week 1. The video track needs about a week for dataset access, consent and setup. The restoration test runs on CPU in that time.</p>
+
+<h2>2. Work completed</h2>
+<p>We have built an evaluation pipeline and used it to answer the SR question. We have not built a restoration engine. All runs are inference-only, with fixed seeds and 1,000-draw bootstrap confidence intervals.</p>
+<table>
+<thead><tr><th style="width:7%">Phase</th><th style="width:43%">Work</th><th>Main finding</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>Reconnaissance, LFW high-resolution control, post-mortem of the earlier baseline</td><td>The recognizers work at high resolution (LFW accuracy 0.9985). Missing face alignment explains most of the weak baseline.</td></tr>
+<tr><td>1</td><td>Baseline: 4 recognizers (ArcFace, AdaFace, MagFace, CurricularFace) on QMUL-TinyFace and QMUL-SurvFace; aligned diagnostic arms</td><td>TinyFace Rank-1 is 24.5–27.5% with resize-only input and 67–70% with 5-point alignment, about +40 points. SurvFace stays hard even with alignment.</td></tr>
+<tr><td>2</td><td>Stratification of all 413,965 crops by luminance and sharpness</td><td>The sharpness score mostly tracks crop size on SurvFace. We fixed this with a size-controlled low-sharpness bin.</td></tr>
+<tr><td>3</td><td>InvSR, TADSR and OSDFace against bicubic and Real-ESRGAN baselines; tuning/eval split with a rule fixed in advance; seed study; probes-only, per-bin and LFW identity checks</td><td>A negative result (section 3).</td></tr>
+</tbody>
+</table>
+<p class="keep"><strong>Status of the proposal objectives:</strong></p>
+<ul>
+  <li>Objective 3 (recognition ablations): done for four recognizers. PartialFC is not done.</li>
+  <li>Objective 4 (identity-aware metrics): done. We report embedding drift, impostor shift, d′ and paired confidence intervals.</li>
+  <li>Objective 5 (QMUL benchmarks): done for SR.</li>
+  <li>Objective 1 (quality-gated restoration): SR is answered. Deblurring, low-light enhancement and the gate are not done.</li>
+  <li>Objective 2 (detector comparison) is not done. Neither are the video pipeline, retrieval index, tracking or demo.</li>
+</ul>
+
+<h2>3. Phase 3 result: SR does not help recognition</h2>
+<p>Evaluation subset: 22,898 crops (TinyFace 800 identities with 4,000 distractors; SurvFace 200 identities). ArcFace is excluded from OSDFace conclusions because OSDFace is trained with an ArcFace identity loss. The numbers below are for AdaFace, MagFace and CurricularFace.</p>
+<table>
+<thead><tr><th style="width:22%">Check</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>Probe and gallery both restored (TinyFace Rank-1, paired change against direct feed)</td><td><strong>OSDFace</strong> is the only arm that improves all three: +0.073 [0.049, 0.097], +0.026 [0.003, 0.048], +0.085 [0.061, 0.110]. <strong>TADSR</strong> is marginal: +0.031 (AdaFace), +0.024 (CurricularFace), −0.005 (MagFace). <strong>InvSR</strong> is worse for every recognizer (−0.080 to −0.133). <strong>Real-ESRGAN</strong> gives no gain and hurts MagFace (−0.048). <strong>Bicubic</strong> matches direct feed.</td></tr>
+<tr><td>Probes restored, gallery untouched (the realistic deployment case)</td><td><strong>Every arm is worse than direct feed.</strong> OSDFace −0.057 to −0.099, InvSR −0.118 to −0.183, Real-ESRGAN −0.084 to −0.148, TADSR −0.023 to −0.043.</td></tr>
+<tr><td>Identity preservation</td><td>Embedding cosine to the unrestored crop is 0.37–0.46 for OSDFace and 0.946–0.975 for bicubic. OSDFace's worst cases are 12–25 px blurs turned into confident faces of a different person.</td></tr>
+<tr><td>Worst crops (size-controlled lowest 20% sharpness)</td><td>The OSDFace gain is smaller there. For two of the three recognizers its CI includes zero.</td></tr>
+<tr><td>LFW at 10 px against a sharp gallery (a test of identity recovery)</td><td><strong>No arm beats plain bicubic.</strong> OSDFace minus bicubic: AdaFace −0.049 [−0.059, −0.039], MagFace −0.007, CurricularFace +0.003. TADSR is within 0.014 of bicubic. InvSR and Real-ESRGAN are 0.12–0.20 AUC below bicubic.</td></tr>
+</tbody>
+</table>
+<p><strong>Sample images are in Appendix A.</strong> <strong>For scale:</strong> face alignment alone adds about +40 Rank-1 points on TinyFace (Phase 1). The best restoration gain is +8.5 points, and it appears only when probe and gallery are restored the same way.</p>
+
+<h2>4. Proposed closing statement for SR</h2>
+<p>The proposal asked <em>whether</em> diffusion restoration improves surveillance recognition while preserving identity. A negative answer is a valid answer to that question. We propose to state it as follows:</p>
+<div class="quote">Off-the-shelf one-step and few-step generative SR (InvSR, TADSR and OSDFace, with Real-ESRGAN as a GAN baseline), used inference-only on resize-only crops, did not improve recognition when only probes were restored. On a controlled 10 px LFW check, no arm beat bicubic interpolation. The only gain required restoring probe and gallery identically, and it came with large identity drift.</div>
+<p class="keep"><strong>What we will not claim:</strong></p>
+<ul>
+  <li>That SR cannot help low-resolution face recognition. We did not test SR trained for this task or with an identity loss.</li>
+  <li>Anything about aligned crops. Every SR arm ran on resize-only crops, so this is a stated limitation.</li>
+  <li>That the LFW check proves hallucination. Clean downsampling is not real CCTV degradation.</li>
+</ul>
+<p>This agrees with a recent finding from Idiap (IJCB 2026, arXiv 2608.06580): learned SR pipelines did not beat direct feed on TinyFace. We recorded this in our Sprint 1 notes from a secondary summary and will verify the figures against the paper before citing them.</p>
+
+<h2>5. Why we will not try smaller SR models</h2>
+<ul>
+  <li>We have already tested a small, single-pass model: Real-ESRGAN. It gave no gain and hurt two recognizers.</li>
+  <li>On LFW at 10 px no arm beat bicubic. This suggests the limit is the information left in a 10–25 px face, not the size of the model.</li>
+  <li>A small model that fits 16×20 px crops would need training. That needs paired real low/high-resolution faces, which we do not have, and a GPU budget we do not have. Training it with an identity loss would also risk leakage into the recognizers we evaluate with.</li>
+  <li>The main reason is the evidence, not the VRAM limit. The VRAM limit only adds to it.</li>
+</ul>
+
+<h2>6. Deblurring and low-light: what the SR results tell us</h2>
+<ol>
+  <li><strong>Generative restoration invents detail on tiny faces.</strong> We will not run diffusion deblurring or diffusion low-light models (LightenDiffusion, QuadPrior, Diff-Retinex++). They would repeat Phase 3 at a higher cost, with the same hallucination risk.</li>
+  <li><strong>Blur and resolution cannot be separated at this size.</strong> Phase 2 showed that the sharpness score mostly tracks crop size, and Phase 3 gains were smaller on the least sharp crops. We expect deblurring to show no effect.</li>
+  <li><strong>Low-light enhancement is the better candidate.</strong> It adjusts pixel values photometrically and does not create facial structure. Caveat: the darkest-10% TinyFace bin has only 98 probes, so statistical power is low.</li>
+</ol>
+<div class="box keep">
+<strong>One-week test (Raghib, CPU, week 1):</strong>
+<ul>
+  <li>Low-light: gamma correction, CLAHE on the L channel, and Zero-DCE++.</li>
+  <li>Deblurring: unsharp mask and one NAFNet (GoPro) checkpoint.</li>
+  <li>Evaluation: the existing Phase 3 code, unchanged. We run both-sides and probes-only scoring, the per-bin breakdown, and the LFW check, with the decision rule fixed in advance.</li>
+  <li><strong>Stop rule:</strong> if no method gives a probes-only gain with a CI above zero, we close the restoration engine and report that. Otherwise the best method becomes the optional gated stage.</li>
+</ul>
+</div>
+
+<h2>7. Video recognition and tracking as the main deliverable</h2>
+<h3>Why</h3>
+<ul>
+  <li>The project has rigorous benchmarks but no working system yet. A demonstrable pipeline is the lowest-risk deliverable in the time left.</li>
+  <li>Tracking is a <strong>non-generative</strong> replacement for restoration. Combining embeddings over the many frames of one track uses real information, where SR invents it. This follows directly from the negative SR result.</li>
+  <li>The proposal listed tracking as a lower-priority objective only because restoration was the main contribution. Now that the restoration question is answered, promoting tracking is a re-prioritisation inside the approved scope.</li>
+</ul>
+<h3>Pipeline</h3>
+<p>SCRFD or RetinaFace detection → 5-point alignment (existing code) → AdaFace embedding (MagFace norm as quality weight) → ByteTrack or BoT-SORT → per-track embedding aggregation → FAISS index match → optional restoration stage, off by default.</p>
+<h3>Experiments (new results for the thesis)</h3>
+<ol>
+  <li>Single-frame versus track-aggregated identification (Rank-1 and TAR@FAR).</li>
+  <li>Aggregation rule: mean, quality-weighted, and top-k by quality.</li>
+  <li>Restoration gate on versus off, using the best method from section 6. This closes Objective 1.</li>
+  <li>Throughput (FPS at 720p) on the lab PC.</li>
+</ol>
+<h3>Data and risks</h3>
+<ul>
+  <li><strong>Video with identity labels.</strong> QMUL datasets are still images. In week 1 we will request or check access for IJB-S (surveillance video with high-resolution enrolment; licence needed), SCface (request form), ChokePoint (CCTV-style video) and YouTube Faces. If none arrives in time, we will measure track aggregation on the public set we can get. Our own campus clips, recorded with written consent, will be used for the demo only, not for reported metrics.</li>
+  <li><strong>Detecting tiny faces.</strong> SCRFD found only 31% of the TinyFace distractors (median 18×14 px). We will report detection rate by face size. SFE-DETR's code is unverified; if it is unavailable we compare SCRFD and RetinaFace only.</li>
+  <li><strong>Lab PC stability.</strong> The PC has had repeated unexpected reboots and power cuts. Long runs will be resumable, or moved to Colab.</li>
+</ul>
+
+<h2>8. Eight-week plan</h2>
+<table>
+<thead><tr><th style="width:9%">Weeks</th><th>Abser (integration)</th><th>Raghib (restoration)</th><th>Umar (detection and recognition)</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Video data access requests; consent forms for own clips; pipeline skeleton</td><td>Low-light and deblur test (section 6)</td><td>Detector comparison on TinyFace and SurvFace</td></tr>
+<tr><td>2–3</td><td>Tracker integration (ByteTrack / BoT-SORT)</td><td>Test write-up; Phase 3 thesis chapter</td><td>FAISS index, enrolment, AdaFace and MagFace wiring</td></tr>
+<tr><td>4–5</td><td>Track aggregation experiments</td><td>Gated restoration stage (default off)</td><td>Video evaluation protocol and metrics</td></tr>
+<tr><td>6–7</td><td>End-to-end runs, FPS</td><td>Results tables</td><td>Ablations</td></tr>
+<tr><td>8</td><td colspan="3">Demo, report and presentation (all members)</td></tr>
+</tbody>
+</table>
+
+<h2>9. What we ask of you</h2>
+<ol>
+  <li>Approve closing SR with the statement in section 4.</li>
+  <li>Approve making the video pipeline with tracking the main deliverable, with restoration as an optional gated stage.</li>
+  <li>Advise on video dataset access, in particular whether the department can sign the IJB-S licence.</li>
+</ol>
+
+<h2 style="break-before: page">Appendix A. Visual evidence: model outputs on real crops</h2>
+<p>Each sample shows the native input (enlarged), the bicubic reference and the model output. Crops were chosen at random (seed 42), the same crops for every model, and not selected by outcome. TinyFace and SurvFace have no sharp original of the same photo, so no ground truth can be shown; LFW is the only dataset where the original exists, which is why we ran the LFW check. The problem label under each sample is our own reading of the image. OSDFace outputs on TinyFace and SurvFace are 256 px thumbnails enlarged to match the others.</p>
+<div class="grid">
+<div class="fig"><div class="tags"><span class="t d">Dataset: TinyFace</span><span class="t s">SR: InvSR</span></div><img src="figures/tinyface_invsr_1.png" alt="TinyFace InvSR"><div class="prob"><strong>Problem shown:</strong> Visible artifacts: blue blobs and speckle painted onto the face</div></div>
+<div class="fig"><div class="tags"><span class="t d">Dataset: TinyFace</span><span class="t s">SR: InvSR</span></div><img src="figures/tinyface_invsr_2.png" alt="TinyFace InvSR"><div class="prob"><strong>Problem shown:</strong> Smooth, plausible face; features redrawn, so identity cannot be verified</div></div>
+<div class="fig"><div class="tags"><span class="t d">Dataset: TinyFace</span><span class="t s">SR: TADSR</span></div><img src="figures/tinyface_tadsr_1.png" alt="TinyFace TADSR"><div class="prob"><strong>Problem shown:</strong> Almost no change: close to bicubic, little recovered</div></div>
+<div class="fig"><div class="tags"><span class="t d">Dataset: TinyFace</span><span class="t s">SR: TADSR</span></div><img src="figures/tinyface_tadsr_2.png" alt="TinyFace TADSR"><div class="prob"><strong>Problem shown:</strong> Eyes, mouth and skin redrawn with invented detail (mild)</div></div>
+<div class="fig"><div class="tags"><span class="t d">Dataset: TinyFace</span><span class="t s">SR: OSDFace</span></div><img src="figures/tinyface_osdface_1.png" alt="TinyFace OSDFace"><div class="prob"><strong>Problem shown:</strong> Identity hallucination: glasses and stubble added that the crop does not show</div></div>
+<div class="fig"><div class="tags"><span class="t d">Dataset: TinyFace</span><span class="t s">SR: OSDFace</span></div><img src="figures/tinyface_osdface_2.png" alt="TinyFace OSDFace"><div class="prob"><strong>Problem shown:</strong> Identity hallucination: invented skin texture, eyes and exaggerated mouth</div></div>
+<div class="fig"><div class="tags"><span class="t d">Dataset: SurvFace</span><span class="t s">SR: InvSR</span></div><img src="figures/survface_invsr_1.png" alt="SurvFace InvSR"><div class="prob"><strong>Problem shown:</strong> Artifact: repeating checkerboard texture on a 12x15 px blur</div></div>
+<div class="fig"><div class="tags"><span class="t d">Dataset: SurvFace</span><span class="t s">SR: InvSR</span></div><img src="figures/survface_invsr_2.png" alt="SurvFace InvSR"><div class="prob"><strong>Problem shown:</strong> Non-face content hallucinated: a room-like scene instead of a face</div></div>
+<div class="fig"><div class="tags"><span class="t d">Dataset: SurvFace</span><span class="t s">SR: TADSR</span></div><img src="figures/survface_tadsr_1.png" alt="SurvFace TADSR"><div class="prob"><strong>Problem shown:</strong> No real recovery: output nearly identical to bicubic</div></div>
+<div class="fig"><div class="tags"><span class="t d">Dataset: SurvFace</span><span class="t s">SR: TADSR</span></div><img src="figures/survface_tadsr_2.png" alt="SurvFace TADSR"><div class="prob"><strong>Problem shown:</strong> No real recovery: output nearly identical to bicubic</div></div>
+<div class="fig"><div class="tags"><span class="t d">Dataset: SurvFace</span><span class="t s">SR: OSDFace</span></div><img src="figures/survface_osdface_1.png" alt="SurvFace OSDFace"><div class="prob"><strong>Problem shown:</strong> Identity hallucination: a sharp side-profile face invented from a 12x15 px blur</div></div>
+<div class="fig"><div class="tags"><span class="t d">Dataset: SurvFace</span><span class="t s">SR: OSDFace</span></div><img src="figures/survface_osdface_2.png" alt="SurvFace OSDFace"><div class="prob"><strong>Problem shown:</strong> Identity hallucination: a sharp bearded man invented from a 17x21 px blur</div></div>
+<div class="fig wide"><div class="tags"><span class="t d">Dataset: LFW (10 px synthetic)</span><span class="t s">SR: OSDFace</span></div><img src="figures/lfw_osdface_1.png" alt="LFW (10 px synthetic) OSDFace"><div class="prob"><strong>Problem shown:</strong> Partial identity drift: gaze, expression and face details differ from the original</div></div>
+<div class="fig wide"><div class="tags"><span class="t d">Dataset: LFW (10 px synthetic)</span><span class="t s">SR: OSDFace</span></div><img src="figures/lfw_osdface_2.png" alt="LFW (10 px synthetic) OSDFace"><div class="prob"><strong>Problem shown:</strong> Identity hallucination: a visibly different face; glasses and skin tone redrawn</div></div>
+</div>
+<p class="small">Sources: every number in this brief comes from REPORT_phase0.md to REPORT_phase3.md and the result files in <code>outputs/sr/results/</code> of the project repository. No new experiments were run for this brief.</p>
+
+</body>
+</html>
