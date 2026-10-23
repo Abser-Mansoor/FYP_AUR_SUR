@@ -1,5 +1,6 @@
 # Phase 4: non-generative low-light and deblur arms on the Phase 3 harness (copy of sr.yaml). Inference only.
 seed: 42
+report: REPORT_phase4.md
 paths:
   survface: Dataset/QMUL-SurvFace-v1/QMUL-SurvFace
   tinyface: Dataset/tinyface/tinyface

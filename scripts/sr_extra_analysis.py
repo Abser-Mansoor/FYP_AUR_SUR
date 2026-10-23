@@ -1,6 +1,10 @@
 """Follow-up analyses for Phase 3 (no restoration, no new GPU inference): cached embeddings only.
 
-    envs/diag/Scripts/python.exe scripts/sr_extra_analysis.py [--workers 4]
+    envs/diag/Scripts/python.exe scripts/sr_extra_analysis.py [--workers 4] [--config configs/sr.yaml]
+
+--config configs/enhance.yaml (Phase 4, envs/score): arms = the config's arms (not noop) at their selection files, plus the gated
+variants (selection_gate_<family>.json); extra slices `dark` (lum_bin == "dark", about 20%) and its complement; results and the report
+come from the config (paths.results, report). Without --config the Phase 3 behaviour is unchanged.
 
 A. Probes-only variant ("restore_gallery: false"): probes / queries use the restored embeddings, the gallery,
    distractors and templates keep the direct-feed embeddings. TinyFace identification and SurvFace open-set are
@@ -35,7 +39,21 @@ SLICES = [("full", None, None), ("low_sharpness", "sharp_bin_sz", "low_sharpness
 QUERY_SPLITS = ("probe", "mated_probe", "unmated_probe")
 
 
-def variants():
+PHASE4_SLICES = [("dark", "lum_bin", "dark"), ("not_dark", "lum_bin", "NOT dark")]
+
+
+def variants(cfg=None):
+    if cfg is not None and "gates" in cfg:
+        out = []
+        for arm in cfg["arms"]:
+            f = RES / f"selection_{arm}.json"
+            if arm != "noop" and f.exists() and json.loads(f.read_text()):
+                out.append((arm, json.loads(f.read_text())[0]["setting"]))
+        for fam in cfg["gates"]:
+            f = RES / f"selection_gate_{fam}.json"
+            if f.exists():
+                out.append((f"gate_{fam}", json.loads(f.read_text())[0]["setting"]))
+        return out
     out = []
     for arm in ("bicubic", "esrgan", "invsr", "tadsr", "osdface"):
         f = RES / f"selection_{arm}.json"
@@ -50,7 +68,7 @@ def _flag(d, ix, col, val):
     return (s != val[4:]) if val.startswith("NOT ") else (s == val)
 
 
-def worker(arm, setting, B, S):
+def worker(arm, setting, B, S, slices=None):
     """All rows for one (arm, setting): probes-only analysis and per-bin analysis."""
     from src import eval_protocols as ev, metrics
     from src.sr import eval as E
@@ -93,7 +111,7 @@ def worker(arm, setting, B, S):
                     row["probes_minus_direct_paired"], row["probes_minus_direct_ci95"] = x["mean"], json.dumps(x["ci95"])
                 probes_rows.append(row)
         # ---- B. per-bin (both sides restored vs direct)
-        for sname, col, val in SLICES:
+        for sname, col, val in (slices or SLICES):
             m_p = np.ones(len(ix[("tinyface", "probe")]), bool) if col is None else _flag(d, ix[("tinyface", "probe")], col, val)
             m_m = np.ones(len(ix[("survface", "mated_probe")]), bool) if col is None else _flag(d, ix[("survface", "mated_probe")], col, val)
             m_u = np.ones(len(ix[("survface", "unmated_probe")]), bool) if col is None else _flag(d, ix[("survface", "unmated_probe")], col, val)
@@ -138,7 +156,7 @@ def fmt_ci(v, d=3):
         return ""
 
 
-def tables(po, pb):
+def tables(po, pb, slice_names=("low_sharpness", "dark10")):
     out = []
     mark = lambda arm, rec: " †" if (arm, rec) in LEAKY else ""  # noqa: E731
     out += ["### Probes-only restoration vs both sides restored (eval subset)", "",
@@ -157,7 +175,7 @@ def tables(po, pb):
             "`low_sharpness` = size-controlled lowest 20% of Laplacian variance; `dark10` = darkest 10% (Phase 2 definitions, per split). "
             "n = number of probes (TinyFace) / mated queries (SurvFace) in the bin; cells with fewer than 20 items are omitted. "
             "TinyFace: Rank-1 change vs direct feed, paired [95% CI]. SurvFace: direct -> restored (unpaired CIs are in `per_bin.csv`).", ""]
-    for sl in ("low_sharpness", "dark10"):
+    for sl in slice_names:
         for comp in (sl, "not_" + sl):
             t = pb[pb.slice == comp]
             out += [f"**Slice `{comp}`**", "", "| Arm | Recognizer | n probes | TinyFace Rank-1: direct -> restored (paired delta) | n mated | SurvFace TPIR20@FPIR=0.3: direct -> restored | n pos pairs | SurvFace AUC: direct -> restored |",
@@ -175,14 +193,19 @@ def tables(po, pb):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--config", default="configs/sr.yaml")
     a = ap.parse_args()
-    cfg = yaml.safe_load(open(ROOT / "configs/sr.yaml"))
+    cfg = yaml.safe_load(open(ROOT / a.config))
+    global RES
+    RES = ROOT / cfg["paths"].get("results", "outputs/sr/results")
+    phase4 = "gates" in cfg
+    slices = SLICES + PHASE4_SLICES if phase4 else SLICES
     B, S = cfg["bootstrap"]["eval_n"], cfg["bootstrap"]["seed"]
-    vs = variants()
+    vs = variants(cfg)
     print("variants:", vs, flush=True)
     po, pb = [], []
     with ProcessPoolExecutor(max_workers=a.workers) as ex:
-        futs = {ex.submit(worker, arm, st, B, S): (arm, st) for arm, st in vs}
+        futs = {ex.submit(worker, arm, st, B, S, slices): (arm, st) for arm, st in vs}
         for f in futs:
             p, b = f.result()
             po += p
@@ -191,9 +214,9 @@ def main():
     po, pb = pd.DataFrame(po), pd.DataFrame(pb)
     po.to_csv(RES / "probes_only.csv", index=False)
     pb.to_csv(RES / "per_bin.csv", index=False)
-    md = "\n".join(tables(po, pb))
+    md = "\n".join(tables(po, pb, ("low_sharpness", "dark10") + (("dark",) if phase4 else ())))
     (RES / "extra_tables.md").write_text(md, encoding="utf-8")
-    rep = ROOT / "REPORT_phase3.md"
+    rep = ROOT / cfg.get("report", "REPORT_phase3.md")
     if rep.exists():
         txt = rep.read_text(encoding="utf-8")
         b0, e0 = "<!-- EXTRA:BEGIN -->", "<!-- EXTRA:END -->"
