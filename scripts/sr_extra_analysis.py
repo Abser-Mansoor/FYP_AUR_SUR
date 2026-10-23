@@ -68,7 +68,7 @@ def _flag(d, ix, col, val):
     return (s != val[4:]) if val.startswith("NOT ") else (s == val)
 
 
-def worker(arm, setting, B, S, slices=None):
+def worker(arm, setting, B, S, slices=None, n_tests=1):
     """All rows for one (arm, setting): probes-only analysis and per-bin analysis."""
     from src import eval_protocols as ev, metrics
     from src.sr import eval as E
@@ -106,6 +106,11 @@ def worker(arm, setting, B, S, slices=None):
                 if proto == "tinyface":
                     if col == "Rank-1":
                         x = metrics.paired_delta(ps["direct"][proto]["first_rank"] < 1, ps["probes"][proto]["first_rank"] < 1, B, S)
+                        if n_tests > 1:  # Bonferroni-adjusted CI (sensitivity check for the Phase 4 stop rule)
+                            dd = (ps["probes"][proto]["first_rank"] < 1).astype(float) - (ps["direct"][proto]["first_rank"] < 1).astype(float)
+                            row["probes_minus_direct_ci95_bonferroni"] = json.dumps(metrics._paired_groups_ci(
+                                lambda i, dd=dd: {"m": float(dd[i].mean())}, len(dd), B, S, alpha=0.05 / n_tests)["m"])
+                            row["n_tests"] = n_tests
                     else:
                         x = metrics.paired_delta(ps["direct"][proto]["ap"], ps["probes"][proto]["ap"], B, S)
                     row["probes_minus_direct_paired"], row["probes_minus_direct_ci95"] = x["mean"], json.dumps(x["ci95"])
@@ -205,7 +210,7 @@ def main():
     print("variants:", vs, flush=True)
     po, pb = [], []
     with ProcessPoolExecutor(max_workers=a.workers) as ex:
-        futs = {ex.submit(worker, arm, st, B, S, slices): (arm, st) for arm, st in vs}
+        futs = {ex.submit(worker, arm, st, B, S, slices, len(vs) if phase4 else 1): (arm, st) for arm, st in vs}
         for f in futs:
             p, b = f.result()
             po += p
