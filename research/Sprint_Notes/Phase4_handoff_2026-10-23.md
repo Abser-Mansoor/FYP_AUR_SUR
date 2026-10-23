@@ -17,7 +17,7 @@ Give this file to Claude at the start of the next session and say "continue Phas
 
 ## Running when this was written (check first)
 Two jobs were started at ~21:30; they may have finished, or died if the laptop slept or the session was interrupted (earlier background runs died that way):
-1. `scripts\sr_extra_analysis.py --config configs\enhance.yaml --workers 4` (CPU; writes `probes_only.csv`, `per_bin.csv`, `extra_tables.md` in `outputs/enhance/results/` and injects the EXTRA block into `REPORT_phase4.md`).
+1. **FINISHED at ~21:40, results committed**: `scripts\sr_extra_analysis.py --config configs\enhance.yaml --workers 4` (CPU; writes `probes_only.csv`, `per_bin.csv`, `extra_tables.md` in `outputs/enhance/results/` and injects the EXTRA block into `REPORT_phase4.md`).
 2. `scripts\enh_lfw_check.py calibrate` (GPU; writes `lfw_enh_calibration.csv`, which must exist before any LFW arm is restored).
 
 Check: `Get-Process python`, `nvidia-smi`, and whether those output files exist. If a file is missing, rerun that command (all steps resume). Do not run two GPU-heavy jobs at once (6 GB VRAM).
