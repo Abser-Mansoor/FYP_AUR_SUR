@@ -1,0 +1,14 @@
+[
+  {
+    "arm": "gate_lowlight",
+    "setting": "q10__gamma_gadaptive",
+    "score": 0.572021835268104,
+    "rank1": 0.4875621890547263,
+    "auc": 0.6564814814814814,
+    "q": 0.1,
+    "tau": 60.17226735333632,
+    "base_arm": "gamma",
+    "base_setting": "gadaptive",
+    "measure": "luminance"
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "lowlight_tau0": {
+    "arcface": true,
+    "adaface": true,
+    "magface": true,
+    "curricularface": true
+  },
+  "lowlight_tauinf": {
+    "arcface": true,
+    "adaface": true,
+    "magface": true,
+    "curricularface": true
+  },
+  "deblur_tau0": {
+    "arcface": true,
+    "adaface": true,
+    "magface": true,
+    "curricularface": true
+  },
+  "deblur_tauinf": {
+    "arcface": true,
+    "adaface": true,
+    "magface": true,
+    "curricularface": true
+  }
+}

@@ -71,6 +71,6 @@ tuning_variants:
 # Gated variants, built from cached embeddings (scripts/enh_gate.py). One global threshold per family: enhance only if the raw
 # measure is below the pooled-tuning quantile.
 gates:
-  lowlight: {measure: luminance, quantiles: [0.1, 0.2, 0.3, 0.5]}
-  deblur:   {measure: lap_var,   quantiles: [0.1, 0.2, 0.3, 0.5]}
+  lowlight: {measure: luminance, quantiles: [0.1, 0.2, 0.3, 0.5], arms: [gamma, clahe, zerodce]}   # gate the family's selected arm
+  deblur:   {measure: lap_var,   quantiles: [0.1, 0.2, 0.3, 0.5], arms: [unsharp, nafnet]}
 osdface_sd_path: models/weights/osdface/sd21base   # ModelScope copy (hash-verified identical to the mirror)

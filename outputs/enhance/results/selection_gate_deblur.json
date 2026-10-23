@@ -1,0 +1,14 @@
+[
+  {
+    "arm": "gate_deblur",
+    "setting": "q50__unsharp_a0.5_s0.5",
+    "score": 0.5763070204532891,
+    "rank1": 0.4875621890547263,
+    "auc": 0.6650518518518519,
+    "q": 0.5,
+    "tau": 3.36894122484772,
+    "base_arm": "unsharp",
+    "base_setting": "a0.5_s0.5",
+    "measure": "lap_var"
+  }
+]
