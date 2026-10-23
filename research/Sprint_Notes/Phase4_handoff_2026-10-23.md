@@ -15,6 +15,9 @@ Give this file to Claude at the start of the next session and say "continue Phas
 - Pre-registered rules committed in `REPORT_phase4.md` (commit d420a69) **before** any eval scoring.
 - Eval subset (22,898 crops) restored and scored for bicubic, gamma, clahe, unsharp, zerodce, nafnet (all 0 failed), and the gated eval (`eval_gated.csv`; gates enhanced 8.8% and 55.6% of eval crops). **No eval numbers have been read or interpreted yet.**
 
+## UPDATE 21:50: the LFW calibration was stopped on purpose (Raghib ended the session); nothing is running now.
+The probes-only analysis finished and is committed. The calibration has cached embeddings in `outputs/sr/lfw/emb_enh/` (hr112 and the first strengths; partial files were removed), so rerunning `enh_lfw_check.py calibrate` only computes the missing strengths (about 4.3 min per strength, 16 strengths in total). `lfw_enh_calibration.csv` does not exist yet. The rest of the list below still applies; skip the "check first" part.
+
 ## Running when this was written (check first)
 Two jobs were started at ~21:30; they may have finished, or died if the laptop slept or the session was interrupted (earlier background runs died that way):
 1. **FINISHED at ~21:40, results committed**: `scripts\sr_extra_analysis.py --config configs\enhance.yaml --workers 4` (CPU; writes `probes_only.csv`, `per_bin.csv`, `extra_tables.md` in `outputs/enhance/results/` and injects the EXTRA block into `REPORT_phase4.md`).
