@@ -11,6 +11,9 @@
 !/outputs/figures/
 !/outputs/stratify/
 /outputs/stratify/measures/
+!/outputs/enhance/
+/outputs/enhance/*
+!/outputs/enhance/results/
 !/outputs/sr/
 /outputs/sr/*
 !/outputs/sr/results/

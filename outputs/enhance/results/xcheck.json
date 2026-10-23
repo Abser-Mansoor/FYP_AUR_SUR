@@ -1,0 +1,43 @@
+{
+  "device": "Quadro RTX 3000",
+  "torch": "2.6.0+cu124",
+  "threshold": 0.9999,
+  "batch": 128,
+  "parts": {
+    "tuning": {
+      "arcface": {
+        "n": 2800,
+        "cos_min": 0.9999963641166687,
+        "cos_mean": 0.9999996423721313,
+        "n_below": 0,
+        "bit_identical": false,
+        "passed": true
+      },
+      "adaface": {
+        "n": 2800,
+        "cos_min": 0.9999902248382568,
+        "cos_mean": 0.9999992847442627,
+        "n_below": 0,
+        "bit_identical": false,
+        "passed": true
+      },
+      "magface": {
+        "n": 2800,
+        "cos_min": 0.9999980330467224,
+        "cos_mean": 0.9999996423721313,
+        "n_below": 0,
+        "bit_identical": false,
+        "passed": true
+      },
+      "curricularface": {
+        "n": 2800,
+        "cos_min": 0.9999865889549255,
+        "cos_mean": 0.9999991059303284,
+        "n_below": 0,
+        "bit_identical": false,
+        "passed": true
+      }
+    }
+  },
+  "passed": true
+}
