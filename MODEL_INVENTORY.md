@@ -84,3 +84,11 @@ Vendored code provenance (commits, upstream SHA-256, patches) is in `src/video/v
 | FaceMoE | huggingface.co/kartiknarayan/FaceMoE; code github.com/Kartik-3004/FaceMoE commit f0972d487ed4fe20bce701840e4a3ee2da2f4c4e | two checkpoints (`swin4m_exp_3_k_2_briar_full`, `swin4m_exp_3_k_2_tinyface_full`) | filled in after download | MIT (repo); model licence not stated by the Hugging Face API | optional 5th recognizer; input 120 px, needs its own preprocessing |
 
 Environment `envs/video`: Python 3.13.5 (system Python, `--system-site-packages`), torch 2.14.0+cu126 (system), numpy 2.5.4, onnxruntime-gpu 1.30.0 with the CUDA 13 libraries copied from `envs/diag`, opencv 4.13.0, scipy 1.18.1, pandas 3.0.6, lap 0.5.13, faiss-cpu 1.15.1, gdown 6.4.2. `torch` must be imported before onnxruntime creates a CUDA session (CUDA 13 cuDNN loaded first breaks torch's CUDA 12 cuDNN); `src/video/detect.py` does this.
+
+## 5. Phase 4 enhancement models (added 2026-10-23, Raghib's laptop)
+Inference only. Code is vendored under `src/sr/vendor/` (provenance in `src/sr/vendor/SOURCES.md`); weights are local (`models/` is gitignored).
+
+| Item | Source | Version | SHA-256 | Licence | Use |
+|---|---|---|---|---|---|
+| Zero-DCE++ | github.com/Li-Chongyi/Zero-DCE_extension | commit 09f202b690f82da939b8e6ec8535960ae97ad8bd; `models/weights/zerodce/Epoch99.pth` (from `Zero-DCE++/snapshots_Zero_DCE++/`) | ca8855b90df9a80fa4195a831f33d3476b1964f787eb70602797c773067f3b84 | CC BY-NC 4.0, academic use (README statement; no LICENSE file) | low-light arm, scale_factor 1 |
+| NAFNet-GoPro-width64 | github.com/megvii-research/NAFNet, official Google Drive link of the README | commit 2b4af71ebe098a92a75910c233a3965a3e93ede4; `models/weights/nafnet/NAFNet-GoPro-width64.pth` | 329d3ab4077b8d6b7ff61de376e483714667960bf85be027bf4335cda701196f | MIT | deblur arm (native and pre-128) |

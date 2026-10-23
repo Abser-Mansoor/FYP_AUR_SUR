@@ -1,0 +1,6 @@
+Zero-DCE++ (Li-Chongyi/Zero-DCE_extension), commit 09f202b690f82da939b8e6ec8535960ae97ad8bd.
+The repository has no LICENSE file. Its README states (section "License"):
+
+  "The code is made available for academic research purpose only. Under Attribution-NonCommercial 4.0 International License."
+
+This project is an academic FYP: use is non-commercial research only.
