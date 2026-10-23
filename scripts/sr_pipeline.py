@@ -181,8 +181,9 @@ def score_free(cfg, part, items, csv, B):
         os.rmdir(lock)
 
 
-def run_arm(cfg, arm):
-    """Tune -> select -> evaluate -> seed study for one arm. Resumable; writes per-arm CSVs."""
+def run_arm(cfg, arm, tune_only=False):
+    """Tune -> select -> evaluate -> seed study for one arm. Resumable; writes per-arm CSVs.
+    tune_only: stop after the selection files (the eval subset is not touched)."""
     variants = [v for v in cfg["tuning_variants"] if v["arm"] == arm]
     log.info(f"[{arm}] tuning sweep: {[vid(v)[1] for v in variants]}")
     for v in variants:
@@ -194,6 +195,9 @@ def run_arm(cfg, arm):
     log.info(f"[{arm}] selection table:\n" + g.to_string(index=False))
     if best.empty:
         log.error(f"[{arm}] no scored variant; stopping this arm")
+        return
+    if tune_only:
+        log.info(f"[{arm}] tuning only: selection written, eval subset not run")
         return
     sel = best.iloc[0]
     v = find_variant(cfg, arm, sel["setting"])
@@ -219,6 +223,7 @@ def main():
     ap.add_argument("cmd", choices=["direct", "arm"])
     ap.add_argument("--arms", nargs="+", default=[], help="arms handled sequentially by this worker")
     ap.add_argument("--config", default="configs/sr.yaml")
+    ap.add_argument("--tune-only", action="store_true", help="stop each arm after the tuning selection (no eval subset)")
     a = ap.parse_args()
     cfg = yaml.safe_load(open(ROOT / a.config))
     global RES
@@ -239,7 +244,7 @@ def main():
             log.info(f"direct feed scored on {part}")
         return
     for arm in a.arms:
-        run_arm(cfg, arm)
+        run_arm(cfg, arm, a.tune_only)
 
 
 if __name__ == "__main__":
