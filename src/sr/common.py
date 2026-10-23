@@ -42,10 +42,11 @@ def list_images(folder, limit=None, file_list=None):
 
 class Timing:
     """Per-crop wall time (CUDA-synchronised) and peak allocated VRAM for one setting.
-    Resumable: timings of earlier (interrupted) invocations are read back from <out>/timing.json."""
+    Resumable: timings of earlier (interrupted) invocations are read back from <out>/timing.json.
+    device="cpu": pure wall-time path (OpenCV runners): torch is never imported, VRAM is reported as 0."""
 
-    def __init__(self, out_dir=None):
-        self.sec, self.errors, self.prev_vram, self.out = [], [], 0.0, out_dir
+    def __init__(self, out_dir=None, device="cuda"):
+        self.sec, self.errors, self.prev_vram, self.out, self.cuda = [], [], 0.0, out_dir, device == "cuda"
         p = Path(out_dir) / "timing.json" if out_dir else None
         if p is not None and p.exists():
             old = json.loads(p.read_text())
@@ -53,25 +54,30 @@ class Timing:
             self.prev_vram = old.get("peak_vram_mb") or 0.0
 
     def run(self, name, fn):
-        import torch
-        torch.cuda.synchronize()
+        if self.cuda:
+            import torch
+            torch.cuda.synchronize()
         t = time.perf_counter()
         try:
             out = fn()
         except Exception as e:  # logged as a result, never dropped
             self.errors.append({"file": name, "error": f"{type(e).__name__}: {e}"})
             return None
-        torch.cuda.synchronize()
+        if self.cuda:
+            torch.cuda.synchronize()
         self.sec.append(time.perf_counter() - t)
         return out
 
     def summary(self):
-        import torch
+        vram = 0.0
+        if self.cuda:
+            import torch
+            vram = round(torch.cuda.max_memory_allocated() / 2 ** 20, 1)
         s = np.array(self.sec)
         n_files = len(list(Path(self.out).glob('*.png'))) if self.out else len(s)  # resumed runs: count outputs on disk
         return dict(n_ok=max(len(s), n_files), n_timed=len(s), n_failed=len(self.errors), sec_per_crop_mean=float(s.mean()) if len(s) else None,
                     sec_per_crop_median=float(np.median(s)) if len(s) else None,
-                    peak_vram_mb=max(self.prev_vram, round(torch.cuda.max_memory_allocated() / 2 ** 20, 1)),
+                    peak_vram_mb=max(self.prev_vram, vram),
                     errors=self.errors[:20], sec_list=[round(x, 4) for x in self.sec])
 
 

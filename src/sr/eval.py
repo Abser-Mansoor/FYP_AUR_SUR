@@ -41,23 +41,21 @@ def embed_dir(recs, d, dirs, threads=16):
     return {n: np.concatenate(v) for n, v in out.items()}
 
 
-def get_embeddings(recs, d, root, tag, part, restored_dir, restore_splits, cache_dir, direct):
-    """Cached embeddings of a variant (tag) for every recognizer. direct=True: native crops, bilinear."""
+def get_embeddings(recs, d, root, tag, part, restored_dir, restore_splits, cache_dir, direct, interp="area"):
+    """Cached embeddings of a variant (tag) for every recognizer. direct=True: native crops, bilinear.
+    Restored rows use `interp` (area for the 512-px SR outputs; bilinear for same-size enhancement), direct rows stay bilinear."""
     f = {n: cache_dir / tag / f"{part}__{n}.npy" for n in recs}
     if all(p.exists() for p in f.values()):
         return {n: np.load(p) for n, p in f.items()}
     native = root / "outputs/sr/subset" / f"{part}_input"
-    for rec in recs.values():
-        rec.pre["interp"] = "bilinear" if direct else "area"
-
     def pick(r):
         if direct or r["split"] not in restore_splits:
             return native / r["file"]
         return restored_dir / r["file"]
     # rows not restored use the direct-feed rule even inside a restored variant
     emb = {n: np.zeros((len(d), 512), np.float32) for n in recs}
-    for mode in ("bilinear", "area"):
-        sel = [(i, r) for i, (_, r) in enumerate(d.iterrows()) if ((direct or r["split"] not in restore_splits) == (mode == "bilinear"))]
+    for is_direct_rule, mode in ((True, "bilinear"), (False, interp)):
+        sel = [(i, r) for i, (_, r) in enumerate(d.iterrows()) if ((direct or r["split"] not in restore_splits) == is_direct_rule)]
         if not sel:
             continue
         for rec in recs.values():
@@ -95,10 +93,10 @@ def protocols(emb, d, pairs, B, S):
     return res
 
 
-def evaluate_variant(recs, d, pairs, root, arm, setting, seed, part, restored_dir, restore_splits, cache_dir, B, S, direct_cache):
+def evaluate_variant(recs, d, pairs, root, arm, setting, seed, part, restored_dir, restore_splits, cache_dir, B, S, direct_cache, interp="area"):
     """One result row per (recognizer x protocol). direct_cache: dict filled with the direct-feed per-sample arrays."""
     tag = f"{arm}/{setting}/seed{seed}"
-    emb = get_embeddings(recs, d, root, tag, part, restored_dir, restore_splits, cache_dir, direct=(arm == "direct"))
+    emb = get_embeddings(recs, d, root, tag, part, restored_dir, restore_splits, cache_dir, direct=(arm == "direct"), interp=interp)
     rows = []
     for rn in recs:
         res = protocols(emb[rn], d, pairs, B, S)

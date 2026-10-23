@@ -1,0 +1,76 @@
+# Phase 4: non-generative low-light and deblur arms on the Phase 3 harness (copy of sr.yaml). Inference only.
+seed: 42
+paths:
+  survface: Dataset/QMUL-SurvFace-v1/QMUL-SurvFace
+  tinyface: Dataset/tinyface/tinyface
+  bins: outputs/stratify/bins
+  out: outputs/sr
+  results: outputs/enhance/results
+
+# One fixed, seeded, identity-stratified subset shared by EVERY arm and every variant.
+subset:
+  seed: 42
+  tuning:   # disjoint identities; hyperparameters are chosen here only
+    tinyface_identities: 50
+    tinyface_distractors: 500
+    survface_identities: 25
+    survface_unmated: 500
+    survface_ver_pairs: 150      # positive; same number negative
+  eval:
+    tinyface_identities: 800
+    tinyface_distractors: 4000
+    survface_identities: 200
+    survface_unmated: 4000
+    survface_ver_pairs: 1000
+
+batch_size: 128   # recognizer batch on the 6 GB laptop GPU (Phase 3 used 256)
+
+# apply the restoration to both probe and gallery images (restore_gallery: false = probes only)
+restore_gallery: true
+
+recognizers:
+  arcface: models/weights/arcface_iresnet100.pth
+  adaface: models/weights/adaface_ir101_ms1mv2.ckpt
+  magface: models/weights/magface_iresnet100_MS1MV2.pth
+  curricularface: models/weights/CurricularFace_Backbone.pth
+
+bootstrap: {tuning_n: 200, eval_n: 1000, seed: 42}
+
+# python / runner per arm (each in its own venv). generic: true arms are called with --input-dir --out-dir --params <json> --device.
+# interp = how restored crops are resized to 112 for the recognizer (a variant may override it).
+arms:
+  noop:     {python: envs/score/Scripts/python.exe,   runner: src/sr/run_photometric.py, generic: true, stochastic: false, interp: bilinear, device: cpu}
+  bicubic:  {python: envs/score/Scripts/python.exe,   runner: src/sr/run_bicubic.py,     stochastic: false, interp: area}
+  gamma:    {python: envs/score/Scripts/python.exe,   runner: src/sr/run_photometric.py, generic: true, stochastic: false, interp: bilinear, device: cpu}
+  clahe:    {python: envs/score/Scripts/python.exe,   runner: src/sr/run_photometric.py, generic: true, stochastic: false, interp: bilinear, device: cpu}
+  unsharp:  {python: envs/score/Scripts/python.exe,   runner: src/sr/run_photometric.py, generic: true, stochastic: false, interp: bilinear, device: cpu}
+  zerodce:  {python: envs/zerodce/Scripts/python.exe, runner: src/sr/run_zerodce.py,     generic: true, stochastic: false, interp: bilinear, device: cuda}
+  nafnet:   {python: envs/nafnet/Scripts/python.exe,  runner: src/sr/run_nafnet.py,      generic: true, stochastic: false, interp: bilinear, device: cuda}
+
+# Tuning sweep; settings are chosen on the tuning subset only. Selection rule (unchanged from Phase 3): highest mean over the
+# NON-LEAKY recognizers (adaface, magface, curricularface) of [TinyFace Rank-1, SurvFace verification AUC].
+# Setting names: remaining keys sorted (g = gamma, c = CLAHE clip, t = CLAHE tiles per side, s = sigma / scale, a = amount).
+tuning_variants:
+  - {arm: noop}
+  - {arm: bicubic, pre: 128}
+  - {arm: gamma, g: 0.5}
+  - {arm: gamma, g: 0.7}
+  - {arm: gamma, g: adaptive}      # log(0.45)/log(mean luminance/255), clamped to [0.3, 1]
+  - {arm: clahe, c: 1, t: 2}
+  - {arm: clahe, c: 1, t: 4}
+  - {arm: clahe, c: 2, t: 2}
+  - {arm: clahe, c: 2, t: 4}
+  - {arm: zerodce, s: 1}           # Zero-DCE++ Epoch99.pth, scale_factor 1, native size
+  - {arm: unsharp, s: 0.5, a: 0.5}
+  - {arm: unsharp, s: 0.5, a: 1.0}
+  - {arm: unsharp, s: 1.0, a: 0.5}
+  - {arm: unsharp, s: 1.0, a: 1.0}
+  - {arm: nafnet, pre: 0,   interp: bilinear}   # native: reflect-pad to a multiple of 16, crop back
+  - {arm: nafnet, pre: 128, interp: area}       # bicubic to 128, then NAFNet
+
+# Gated variants, built from cached embeddings (scripts/enh_gate.py). One global threshold per family: enhance only if the raw
+# measure is below the pooled-tuning quantile.
+gates:
+  lowlight: {measure: luminance, quantiles: [0.1, 0.2, 0.3, 0.5]}
+  deblur:   {measure: lap_var,   quantiles: [0.1, 0.2, 0.3, 0.5]}
+osdface_sd_path: models/weights/osdface/sd21base   # ModelScope copy (hash-verified identical to the mirror)

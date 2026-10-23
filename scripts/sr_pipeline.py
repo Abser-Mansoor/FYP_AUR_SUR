@@ -37,7 +37,15 @@ def vid(v):
         return a, f"pre{v['pre']}_st{v['steps']}"
     if a == "tadsr":
         return a, f"pre{v['pre']}_t{v['t']}"
-    return a, f"pre{v['pre']}"
+    if a in ("bicubic", "osdface"):
+        return a, f"pre{v['pre']}"
+    # generic (Phase 4) arms: the remaining keys sorted, e.g. gamma__g0.7, clahe__c2_t4, nafnet__pre128. interp is not part of the name.
+    return a, "_".join(f"{k}{val}" for k, val in sorted(v.items()) if k not in ("arm", "interp")) or "default"
+
+
+def variant_interp(cfg, v):
+    """Embedding resize rule of a variant's restored crops: the variant's own, else the arm's, else area (Phase 3 rule)."""
+    return v.get("interp", cfg["arms"][v["arm"]].get("interp", "area"))
 
 
 def out_dir(part, v, seed):
@@ -69,6 +77,9 @@ def restore(cfg, part, v, seed, limit=None):
         cmd += tmp + ["--pre-sizes", str(v["pre"]), "--out-template", rel]
     elif a == "invsr":
         cmd += ["--out-dir", rel, "--pre-size", str(v["pre"]), "--steps", str(v["steps"]), "--seed", str(seed)]
+    elif arm.get("generic"):
+        params = {k: val for k, val in v.items() if k != "interp"}
+        cmd += ["--out-dir", rel, "--params", json.dumps(params), "--device", arm.get("device", "cpu")]
     elif a == "tadsr":
         cmd += tmp + ["--pre-size", str(v["pre"]), "--timesteps", str(v["t"]), "--seed", str(seed), "--out-template", rel]
     else:
@@ -89,7 +100,8 @@ def restore(cfg, part, v, seed, limit=None):
 
 
 def make_recs(cfg):
-    return {n: Recognizer(n, ROOT / w, (112, 112), "bilinear", True, 256, "cuda") for n, w in cfg["recognizers"].items()}
+    bs = cfg.get("batch_size", 256)
+    return {n: Recognizer(n, ROOT / w, (112, 112), "bilinear", True, bs, "cuda") for n, w in cfg["recognizers"].items()}
 
 
 def score(cfg, recs, part, items, results_csv, B):
@@ -116,7 +128,7 @@ def score(cfg, recs, part, items, results_csv, B):
             if not tinfo or (tinfo.get("n_ok") or 0) < len(d):
                 pd.DataFrame(all_rows).to_csv(results_csv, index=False)
                 continue
-        rows = E.evaluate_variant(recs, d, pairs, ROOT, a, s, seed, part, od, restore_splits, cache, B, S, dc)
+        rows = E.evaluate_variant(recs, d, pairs, ROOT, a, s, seed, part, od, restore_splits, cache, B, S, dc, interp=variant_interp(cfg, v))
         for r in rows:
             r.update(tinfo)
             r["status"] = "OK"
@@ -185,7 +197,7 @@ def run_arm(cfg, arm):
         return
     sel = best.iloc[0]
     v = find_variant(cfg, arm, sel["setting"])
-    if v["pre"] == 256 and arm in ("invsr", "tadsr"):
+    if v.get("pre") == 256 and arm in ("invsr", "tadsr"):
         msg = f"[{arm}] selected {sel['setting']} (pre-size 256, 7-10 h on the eval subset). STOPPED: needs your approval."
         (RES / f"needs_approval_{arm}.txt").write_text(msg)
         log.warning(msg)
@@ -209,10 +221,12 @@ def main():
     ap.add_argument("--config", default="configs/sr.yaml")
     a = ap.parse_args()
     cfg = yaml.safe_load(open(ROOT / a.config))
+    global RES
+    RES = ROOT / cfg["paths"].get("results", "outputs/sr/results")
     RES.mkdir(parents=True, exist_ok=True)
     tag = "direct" if a.cmd == "direct" else "_".join(a.arms)
     logging.basicConfig(level=logging.INFO, format=f"[%(asctime)s] [{tag}] %(message)s",
-                        handlers=[logging.FileHandler(ROOT / "outputs/sr/run.log"), logging.StreamHandler(sys.stdout)])
+                        handlers=[logging.FileHandler(RES.parent / "run.log"), logging.StreamHandler(sys.stdout)])
     seed_all(cfg["seed"], True, True)
     if a.cmd == "direct":
         # compute the direct-feed embeddings/per-sample files once, so parallel workers only read them
