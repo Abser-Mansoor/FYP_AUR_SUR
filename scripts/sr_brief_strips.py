@@ -1,6 +1,8 @@
 """One strip per comparison (input | bicubic | model output) for the supervisor brief, into docs/figures/.
 Same random crops as scripts/sr_sample_figs.py (seed 42). Run: envs/diag/Scripts/python.exe scripts/sr_brief_strips.py
+Phase 4: envs/score/Scripts/python.exe scripts/sr_brief_strips.py --config configs/enhance.yaml [--arms ...]
 """
+import argparse
 import sys
 from pathlib import Path
 
@@ -27,6 +29,15 @@ def strip(ims, titles, path):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--config", default=None)
+    ap.add_argument("--arms", nargs="+", default=None)
+    a = ap.parse_args()
+    if a.config:  # Phase 4
+        import yaml
+        import enh_samples
+        cfg = yaml.safe_load(open(S.ROOT / a.config))
+        return enh_samples.strips(S.ROOT / cfg["paths"]["results"], a.arms)
     df = pd.read_csv(S.SR / "subset/eval_images.csv")
     t3 = ["Input (enlarged)", "Bicubic", "Model output"]
     for ds, split in (("tinyface", "probe"), ("survface", "mated_probe")):

@@ -1,6 +1,7 @@
 """Failure-case sheets for the selected variants on the eval subset (runs in envs/diag after `sr_pipeline.py eval`).
 
     envs/diag/Scripts/python.exe scripts/sr_failure_cases.py [--n 12]
+    envs/score/Scripts/python.exe scripts/sr_failure_cases.py --config configs/enhance.yaml [--arms gamma ...]   (Phase 4: outputs/enhance/failure_cases)
 
 Per arm, three sheets in outputs/sr/failure_cases/:
   <arm>__identity_changed.png : the queries whose restored embedding moved furthest from the direct-feed embedding
@@ -65,14 +66,15 @@ class Images:
         return cv2.imdecode(np.frombuffer(zf.read(n), np.uint8), cv2.IMREAD_COLOR)
 
 
-def selected_variants(res, cache):
+def selected_variants(res, cache, cfg=None, arms=None):
     """(arm, setting) of every arm's rule-selected setting with scored eval embeddings, plus the InvSR sensitivity setting."""
     out = []
-    for arm in ("bicubic", "esrgan", "invsr", "tadsr", "osdface"):
+    for arm in (["bicubic", "gamma", "clahe", "zerodce", "unsharp", "nafnet"] if cfg is not None else ("bicubic", "esrgan", "invsr", "tadsr", "osdface")):
         f = res / f"selection_{arm}.json"
-        if f.exists() and json.loads(f.read_text()):
+        if f.exists() and json.loads(f.read_text()) and (not arms or arm in arms):
             out.append((arm, json.loads(f.read_text())[0]["setting"]))
-    out.append(("invsr", "pre128_st1"))
+    if cfg is None:
+        out.append(("invsr", "pre128_st1"))
     keep = []
     for arm, setting in out:
         if (cache / arm / setting / "seed0" / "eval__adaface__tinyface_ps.npz").exists():
@@ -85,17 +87,20 @@ def selected_variants(res, cache):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=12)
+    ap.add_argument("--config", default=None)
+    ap.add_argument("--arms", nargs="+", default=None)
     a = ap.parse_args()
-    cfg = yaml.safe_load(open(ROOT / "configs/sr.yaml"))
+    cfg = yaml.safe_load(open(ROOT / (a.config or "configs/sr.yaml")))
     d, _ = E.load_subset(ROOT, "eval")
     native = ROOT / "outputs/sr/subset/eval_input"
     cache = ROOT / "outputs/sr/emb/eval"
-    out = ROOT / "outputs/sr/failure_cases"
+    res = ROOT / cfg["paths"].get("results", "outputs/sr/results")
+    out = res.parent / "failure_cases"  # Phase 3: outputs/sr/failure_cases
     out.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(cfg["seed"])
     q_idx = np.flatnonzero(d["split"].isin(["probe", "mated_probe"]).to_numpy())
     dire = {r: np.load(cache / "direct/resize/seed0" / f"eval__{r}.npy") for r in E.NON_LEAKY}
-    for arm, setting in selected_variants(ROOT / "outputs/sr/results", cache):
+    for arm, setting in selected_variants(res, cache, cfg if a.config else None, a.arms):
         rng = np.random.default_rng(cfg["seed"])  # same random crops for every arm, so the random sheets are comparable
         img = Images(arm, setting)
         tag = f"{arm}__{setting}"

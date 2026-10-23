@@ -3,8 +3,11 @@
 Samples are random (seed 42), identical across models within a dataset. Nothing is selected by outcome.
 Outputs: outputs/sr/samples/{tinyface,survface,lfw_osdface}.png and samples.csv (which crops were shown).
 Run: envs/diag/Scripts/python.exe scripts/sr_sample_figs.py
+Phase 4: envs/score/Scripts/python.exe scripts/sr_sample_figs.py --config configs/enhance.yaml [--arms gamma clahe ...] (see enh_samples.py)
 """
+import argparse
 import io
+import sys
 import zipfile
 from pathlib import Path
 
@@ -64,6 +67,16 @@ def sheet(rows, titles, path, head):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--config", default=None)
+    ap.add_argument("--arms", nargs="+", default=None)
+    a = ap.parse_args()
+    if a.config:  # Phase 4
+        import yaml
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import enh_samples
+        cfg = yaml.safe_load(open(ROOT / a.config))
+        return enh_samples.sheets(ROOT / cfg["paths"]["results"], a.arms)
     df = pd.read_csv(SR / "subset/eval_images.csv")
     log = []
     for ds, split in (("tinyface", "probe"), ("survface", "mated_probe")):
