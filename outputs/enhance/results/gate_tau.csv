@@ -3,7 +3,9 @@ lowlight,tuning,0.1,60.17226735333632,luminance,gamma__gadaptive,0.1,2800
 lowlight,tuning,0.2,69.22117667907142,luminance,gamma__gadaptive,0.2,2800
 lowlight,tuning,0.3,75.17171717171718,luminance,gamma__gadaptive,0.3,2800
 lowlight,tuning,0.5,87.53113063407181,luminance,gamma__gadaptive,0.5,2800
+lowlight,eval,0.1,60.17226735333632,luminance,gamma__gadaptive,0.08795527993711241,22898
 deblur,tuning,0.1,1.925278864697286,lap_var,unsharp__a0.5_s0.5,0.1,2800
 deblur,tuning,0.2,2.1779017806301413,lap_var,unsharp__a0.5_s0.5,0.2,2800
 deblur,tuning,0.3,2.4736364584672152,lap_var,unsharp__a0.5_s0.5,0.3,2800
 deblur,tuning,0.5,3.36894122484772,lap_var,unsharp__a0.5_s0.5,0.5,2800
+deblur,eval,0.5,3.36894122484772,lap_var,unsharp__a0.5_s0.5,0.5561184382915538,22898
