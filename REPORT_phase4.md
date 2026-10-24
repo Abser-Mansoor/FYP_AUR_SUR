@@ -1,6 +1,6 @@
 # REPORT — Phase 4: non-generative low-light and deblur test (draft)
 
-**Status:** draft. Sections 1-8, 10 and 11 are filled after the eval subset is scored. The rules in section 0 were written and committed **before** the eval subset was scored (see the git history of this file).
+**Status:** complete, pending supervisor approval (end-of-W2 checkpoint). The rules in section 0 were written and committed **before** the eval subset was scored (see the git history of this file).
 
 ## 0. Pre-registered decision rules (fixed before the eval subset is scored)
 Question: does any low-light or deblur method give a **probes-only** recognition gain with a 95% CI above zero? Yes: the winner becomes the gate arm for Phase 8. No: restoration is closed.
@@ -19,19 +19,275 @@ Question: does any low-light or deblur method give a **probes-only** recognition
 **Harness sanity (done before the sweep).** On the RTX 3000, `noop` embeddings equal direct embeddings for all 4 recognizers on both parts (`np.array_equal`), and the noop paired Rank-1 delta is exactly 0. Cross-device check (`outputs/enhance/results/xcheck.json`): per-crop cosine to the lab-PC direct embeddings is above 0.9999 for all 4 recognizers (minimum 0.999987).
 
 ## 1. Summary and stop-rule verdict
-_To be filled._
+**Verdict (pre-registered stop rule, section 0): restoration is closed.** None of the 6 selected arms and 2 gated variants gives a probes-only TinyFace Rank-1 paired gain with a 95% CI above zero for any non-leaky recognizer (0 of 3 for every arm, with or without the Bonferroni adjustment over 8 tests). The stop-rule table at the top of section 5 has the per-recognizer gains.
+
+- **Real degraded faces:** the gains are zero or negative. Mean probes-only gain over AdaFace, MagFace and CurricularFace: gate_deblur -0.0003, gate_lowlight -0.0040, unsharp -0.0049, bicubic -0.0063, gamma -0.0089, NAFNet -0.0271, Zero-DCE++ -0.0364, CLAHE -0.0436. The CI is entirely below zero for every recognizer for CLAHE, Zero-DCE++ and NAFNet.
+- **Dark and blurry subsets:** no arm has a CI above zero, and every mean change is at or below zero, in the dark bin (236 probes), the darkest-10% bin (98 probes) or the low-sharpness bin (217 probes); see section 5. Dark10 is small, so its intervals are wide.
+- **Tuning subset:** no selected arm scored above the no-op on the tuning score (noop 0.5728). The deblur gate at q50 reached 0.5763 on tuning; on the eval subset its probes-only gain is -0.0003 (CI includes zero).
+- **LFW synthetic check (section 6):** on Gaussian blur (sigma 8) NAFNet recovers identity by the pre-registered rule (cross-AUC +0.073 to +0.092, 3 of 3 non-leaky recognizers). On motion blur it meets the rule formally, but the effect is +0.0006 to +0.0009 on a baseline of 0.9985, so it is a ceiling effect, not a finding. No low-light arm meets the rule (Zero-DCE++ 1 of 3, gamma and CLAHE 0 of 3).
+- **Reading:** a deblurring network can undo synthetic Gaussian blur, but the same network lowers recognition on the real TinyFace and SurvFace probes, where the degradation is not Gaussian blur. Low-light methods do not help even on the synthetic dark set.
 
 ## 2. What was run
-_To be filled (device Quadro RTX 3000 6 GB, torch 2.6.0+cu124, cross-device check, runtimes)._
+- **Device:** Raghib's laptop, Quadro RTX 3000 (6 GB), torch 2.6.0+cu124, recognizer batch 128. Every reported number, including the direct-feed baseline, was computed on this one device, so paired deltas never mix devices.
+- **Cross-device check** (`xcheck.json`): direct-feed embeddings of the 2,800 tuning crops against the lab-PC embeddings; per-crop cosine above 0.9999 for all four recognizers (minimum 0.999996 ArcFace, 0.999990 AdaFace, 0.999998 MagFace, 0.999987 CurricularFace). The embeddings are not bit-identical across devices, as expected.
+- **Harness sanity:** `noop` embeddings equal direct-feed embeddings (`np.array_equal`) for all four recognizers on both tuning and eval, and the noop paired Rank-1 delta is exactly 0.
+- **Harness:** the Phase 3 harness with the changes listed in the runbook (results path and batch size from the config, generic arms, per-variant embedding rule). The Phase 3 report tables regenerate unchanged except for the "Remote device" column, which needs Colab timing files that are not on this laptop.
+- **Arms and tuning:** 16 variants on the tuning subset (2,800 crops), 0 failed crops. Selected on the Phase 3 rule: bicubic pre-128, gamma adaptive, CLAHE clip 2 / 2x2 tiles, unsharp sigma 0.5 / amount 0.5, Zero-DCE++ scale_factor 1, NAFNet native. Each was run on the eval subset (22,898 crops) with 0 failed crops.
+- **Gates:** chosen on tuning only. Low-light: gamma-adaptive where raw luminance is below 60.17 (q10; 8.8% of eval crops enhanced). Deblur: unsharp where raw lap_var is below 3.369 (q50; 55.6% of eval crops enhanced). Gating sanity (tau = 0 equals direct, tau = infinity equals the full arm, embedding equality) passed for both families.
+- **Runtimes** are in section 8.
 
 ## 3. Findings per arm
-_To be filled._
+Non-leaky recognizers (AdaFace, MagFace, CurricularFace); probes-only TinyFace Rank-1 gain, mean over the three (full CIs in section 5). For reference, mean direct-feed Rank-1 is 0.3232.
+
+- **bicubic pre-128 (control):** -0.0063. Interpolation alone does nothing useful here.
+- **gamma (adaptive):** -0.0089. Brightens dark crops but also exposes colour casts and block artefacts (section 7); mean probes-only SurvFace AUC is 0.651 against 0.657 for direct feed.
+- **CLAHE (c2, 2x2):** -0.0436, the worst arm. Local contrast amplifies noise and compression blocks; 33 of 1,155 TinyFace probes lose a correct rank-1 match for at least 2 of 3 recognizers.
+- **Zero-DCE++ (scale 1):** -0.0364 (22 lost matches). It lifts brightness but adds a pink cast at full resolution; it helps on synthetic dark only for ArcFace and MagFace.
+- **unsharp (sigma 0.5, amount 0.5):** -0.0049. Almost no visible change at this size.
+- **NAFNet (GoPro, native):** -0.0271 (30 lost matches). It visibly sharpens edges (section 7) but moves the embeddings of real probes away from their gallery images; on synthetic Gaussian blur it improves identity (section 6).
+- **Tuning vs eval:** no selected arm beat the no-op on tuning and none does on eval. The tuning-set AUC gains of NAFNet native (0.672 against 0.663) and the stronger unsharp settings did not translate into Rank-1 gains.
 
 ## 4. Gated variants
-_To be filled._
+- **Low-light gate** (gamma-adaptive below luminance 60.17): probes-only gain -0.0040 (AdaFace -0.0043 [-0.0087, -0.0009], MagFace -0.0043 [-0.0095, +0.0000], CurricularFace -0.0035 [-0.0078, +0.0000]). Gating roughly halves the loss of the full arm (-0.0089 to -0.0040) but does not turn it positive.
+- **Deblur gate** (unsharp below lap_var 3.369): probes-only gain -0.0003; every interval includes or touches zero. It is the closest to the direct feed of all variants, because it changes little.
+- Neither gate meets the stop rule. The lap_var gate is size-confounded (Phase 2): small crops tend to have low lap_var, so the gate partly selects by crop size (limitations, section 10).
 
 ## 5. Probes-only and per-bin (`dark`, `dark10`, `low_sharpness`)
 <!-- TABLES:BEGIN -->
+Eval subset: 22898 crops; tuning subset: 2800 crops. Values: point estimate [95% bootstrap CI, 1,000 draws]. † = leaky recognizer (OSDFace's identity loss uses ArcFace); conclusions rest on the other three.
+
+**Stop rule: probes-only TinyFace Rank-1 paired gain (eval subset, non-leaky recognizers), 8 tests**
+
+Gain = probes restored / enhanced, gallery and distractors direct, minus direct feed, paired on the same probes, 95% bootstrap CI. 'Bonferroni' is the same gain with the CI at 0.05 / number of tests (sensitivity check). Rule: closes restoration unless some arm has the CI above zero for at least 2 of the 3 recognizers.
+
+| Arm | AdaFace | MagFace | CurricularFace | Mean gain | CI > 0 (of 3) | Bonferroni CI > 0 (of 3) |
+|---|---|---|---|---|---|---|
+| bicubic: pre128 | +0.0035 [-0.0078, +0.0156] | -0.0173 [-0.0286, -0.0061] | -0.0052 [-0.0173, +0.0069] | -0.0063 | 0 | 0 |
+| gamma: gadaptive | -0.0113 [-0.0182, -0.0052] | -0.0069 [-0.0147, +0.0009] | -0.0087 [-0.0165, -0.0017] | -0.0089 | 0 | 0 |
+| clahe: c2_t2 | -0.0468 [-0.0623, -0.0294] | -0.0381 [-0.0528, -0.0234] | -0.0459 [-0.0623, -0.0303] | -0.0436 | 0 | 0 |
+| unsharp: a0.5_s0.5 | -0.0095 [-0.0182, -0.0009] | -0.0035 [-0.0121, +0.0044] | -0.0017 [-0.0087, +0.0061] | -0.0049 | 0 | 0 |
+| zerodce: s1 | -0.0381 [-0.0545, -0.0208] | -0.0381 [-0.0528, -0.0234] | -0.0329 [-0.0502, -0.0165] | -0.0364 | 0 | 0 |
+| nafnet: pre0 | -0.0294 [-0.0433, -0.0147] | -0.0286 [-0.0433, -0.0156] | -0.0234 [-0.0364, -0.0113] | -0.0271 | 0 | 0 |
+| gate_lowlight: q10__gamma_gadaptive | -0.0043 [-0.0087, -0.0009] | -0.0043 [-0.0095, +0.0000] | -0.0035 [-0.0078, +0.0000] | -0.0040 | 0 | 0 |
+| gate_deblur: q50__unsharp_a0.5_s0.5 | -0.0009 [-0.0026, +0.0000] | +0.0000 [-0.0026, +0.0026] | +0.0000 [-0.0026, +0.0026] | -0.0003 | 0 | 0 |
+
+**Verdict (mechanical): no arm meets the rule: restoration is closed.**
+
+### TinyFace Rank-1 (closed-set identification)
+
+| Arm | ArcFace | AdaFace | MagFace | CurricularFace |
+|---|---|---|---|---|
+| Direct feed (resize) | 0.302 [0.276, 0.328] | 0.336 [0.309, 0.363] | 0.336 [0.310, 0.362] | 0.298 [0.271, 0.325] |
+| No-op (control): default | 0.302 [0.276, 0.328] | 0.336 [0.309, 0.363] | 0.336 [0.310, 0.362] | 0.298 [0.271, 0.325] |
+| bicubic: pre128 | 0.298 [0.274, 0.323] | 0.345 [0.319, 0.371] | 0.318 [0.291, 0.343] | 0.283 [0.258, 0.307] |
+| gamma: gadaptive | 0.300 [0.274, 0.328] | 0.325 [0.300, 0.352] | 0.334 [0.307, 0.362] | 0.289 [0.264, 0.315] |
+| clahe: c2_t2 | 0.264 [0.240, 0.289] | 0.293 [0.268, 0.319] | 0.295 [0.270, 0.322] | 0.259 [0.235, 0.284] |
+| unsharp: a0.5_s0.5 | 0.293 [0.268, 0.319] | 0.327 [0.300, 0.352] | 0.332 [0.305, 0.358] | 0.290 [0.266, 0.316] |
+| zerodce: s1 | 0.273 [0.248, 0.297] | 0.307 [0.281, 0.334] | 0.313 [0.288, 0.339] | 0.275 [0.250, 0.302] |
+| nafnet: pre0 | 0.281 [0.256, 0.305] | 0.299 [0.274, 0.324] | 0.304 [0.277, 0.331] | 0.285 [0.261, 0.310] |
+| Low-light gate on the selected low-light arm: q10__gamma_gadaptive | 0.301 [0.276, 0.328] | 0.328 [0.301, 0.356] | 0.333 [0.308, 0.359] | 0.295 [0.270, 0.322] |
+| Deblur gate on the selected deblur arm: q50__unsharp_a0.5_s0.5 | 0.301 [0.275, 0.327] | 0.334 [0.307, 0.360] | 0.334 [0.308, 0.360] | 0.296 [0.269, 0.323] |
+
+### TinyFace mAP
+
+| Arm | ArcFace | AdaFace | MagFace | CurricularFace |
+|---|---|---|---|---|
+| Direct feed (resize) | 0.222 [0.202, 0.241] | 0.262 [0.240, 0.284] | 0.250 [0.228, 0.271] | 0.224 [0.204, 0.245] |
+| No-op (control): default | 0.222 [0.202, 0.241] | 0.262 [0.240, 0.284] | 0.250 [0.228, 0.271] | 0.224 [0.204, 0.245] |
+| bicubic: pre128 | 0.222 [0.204, 0.242] | 0.267 [0.245, 0.289] | 0.238 [0.216, 0.258] | 0.212 [0.194, 0.232] |
+| gamma: gadaptive | 0.223 [0.203, 0.243] | 0.256 [0.234, 0.277] | 0.247 [0.226, 0.269] | 0.219 [0.199, 0.239] |
+| clahe: c2_t2 | 0.191 [0.173, 0.210] | 0.224 [0.204, 0.246] | 0.221 [0.201, 0.242] | 0.188 [0.170, 0.206] |
+| unsharp: a0.5_s0.5 | 0.217 [0.198, 0.237] | 0.253 [0.231, 0.275] | 0.248 [0.227, 0.270] | 0.218 [0.199, 0.238] |
+| zerodce: s1 | 0.201 [0.183, 0.218] | 0.236 [0.216, 0.257] | 0.232 [0.212, 0.254] | 0.210 [0.190, 0.230] |
+| nafnet: pre0 | 0.202 [0.184, 0.220] | 0.228 [0.208, 0.248] | 0.225 [0.205, 0.245] | 0.207 [0.189, 0.226] |
+| Low-light gate on the selected low-light arm: q10__gamma_gadaptive | 0.221 [0.201, 0.241] | 0.257 [0.235, 0.279] | 0.247 [0.226, 0.269] | 0.221 [0.201, 0.242] |
+| Deblur gate on the selected deblur arm: q50__unsharp_a0.5_s0.5 | 0.221 [0.202, 0.241] | 0.260 [0.239, 0.282] | 0.248 [0.227, 0.270] | 0.224 [0.203, 0.245] |
+
+### SurvFace verification TAR@FAR=0.1
+
+| Arm | ArcFace | AdaFace | MagFace | CurricularFace |
+|---|---|---|---|---|
+| Direct feed (resize) | 0.305 [0.253, 0.338] | 0.268 [0.222, 0.313] | 0.310 [0.268, 0.343] | 0.279 [0.226, 0.328] |
+| No-op (control): default | 0.305 [0.253, 0.338] | 0.268 [0.222, 0.313] | 0.310 [0.268, 0.343] | 0.279 [0.226, 0.328] |
+| bicubic: pre128 | 0.316 [0.264, 0.354] | 0.287 [0.241, 0.317] | 0.293 [0.256, 0.338] | 0.265 [0.229, 0.319] |
+| gamma: gadaptive | 0.298 [0.250, 0.335] | 0.242 [0.202, 0.289] | 0.322 [0.287, 0.354] | 0.294 [0.247, 0.330] |
+| clahe: c2_t2 | 0.278 [0.241, 0.316] | 0.213 [0.163, 0.261] | 0.306 [0.265, 0.347] | 0.264 [0.227, 0.303] |
+| unsharp: a0.5_s0.5 | 0.289 [0.253, 0.331] | 0.249 [0.209, 0.287] | 0.302 [0.267, 0.337] | 0.284 [0.246, 0.320] |
+| zerodce: s1 | 0.308 [0.258, 0.339] | 0.214 [0.185, 0.262] | 0.329 [0.290, 0.371] | 0.271 [0.229, 0.300] |
+| nafnet: pre0 | 0.275 [0.236, 0.314] | 0.211 [0.181, 0.250] | 0.296 [0.254, 0.327] | 0.251 [0.207, 0.301] |
+| Low-light gate on the selected low-light arm: q10__gamma_gadaptive | 0.309 [0.256, 0.347] | 0.261 [0.206, 0.299] | 0.322 [0.286, 0.354] | 0.288 [0.229, 0.327] |
+| Deblur gate on the selected deblur arm: q50__unsharp_a0.5_s0.5 | 0.295 [0.257, 0.341] | 0.258 [0.219, 0.296] | 0.303 [0.267, 0.337] | 0.293 [0.244, 0.329] |
+
+### SurvFace verification TAR@FAR=0.01
+
+| Arm | ArcFace | AdaFace | MagFace | CurricularFace |
+|---|---|---|---|---|
+| Direct feed (resize) | 0.077 [0.022, 0.105] | 0.054 [0.033, 0.098] | 0.082 [0.060, 0.147] | 0.069 [0.045, 0.106] |
+| No-op (control): default | 0.077 [0.022, 0.105] | 0.054 [0.033, 0.098] | 0.082 [0.060, 0.147] | 0.069 [0.045, 0.106] |
+| bicubic: pre128 | 0.084 [0.043, 0.125] | 0.066 [0.024, 0.102] | 0.105 [0.074, 0.142] | 0.083 [0.052, 0.109] |
+| gamma: gadaptive | 0.082 [0.042, 0.108] | 0.050 [0.026, 0.080] | 0.086 [0.068, 0.126] | 0.068 [0.045, 0.089] |
+| clahe: c2_t2 | 0.099 [0.048, 0.131] | 0.050 [0.027, 0.068] | 0.105 [0.072, 0.136] | 0.061 [0.039, 0.086] |
+| unsharp: a0.5_s0.5 | 0.077 [0.020, 0.120] | 0.043 [0.018, 0.082] | 0.095 [0.068, 0.135] | 0.074 [0.051, 0.103] |
+| zerodce: s1 | 0.084 [0.036, 0.131] | 0.026 [0.016, 0.051] | 0.103 [0.079, 0.153] | 0.068 [0.028, 0.115] |
+| nafnet: pre0 | 0.079 [0.046, 0.112] | 0.049 [0.031, 0.090] | 0.096 [0.069, 0.133] | 0.075 [0.036, 0.103] |
+| Low-light gate on the selected low-light arm: q10__gamma_gadaptive | 0.075 [0.028, 0.103] | 0.041 [0.026, 0.074] | 0.079 [0.058, 0.141] | 0.063 [0.042, 0.092] |
+| Deblur gate on the selected deblur arm: q50__unsharp_a0.5_s0.5 | 0.077 [0.024, 0.125] | 0.052 [0.018, 0.092] | 0.092 [0.067, 0.135] | 0.077 [0.044, 0.110] |
+
+### SurvFace verification AUC
+
+| Arm | ArcFace | AdaFace | MagFace | CurricularFace |
+|---|---|---|---|---|
+| Direct feed (resize) | 0.663 [0.637, 0.686] | 0.652 [0.628, 0.676] | 0.673 [0.649, 0.695] | 0.647 [0.621, 0.670] |
+| No-op (control): default | 0.663 [0.637, 0.686] | 0.652 [0.628, 0.676] | 0.673 [0.649, 0.695] | 0.647 [0.621, 0.670] |
+| bicubic: pre128 | 0.671 [0.647, 0.694] | 0.661 [0.637, 0.684] | 0.671 [0.646, 0.693] | 0.645 [0.621, 0.669] |
+| gamma: gadaptive | 0.663 [0.638, 0.687] | 0.639 [0.613, 0.663] | 0.671 [0.648, 0.694] | 0.640 [0.614, 0.663] |
+| clahe: c2_t2 | 0.658 [0.634, 0.681] | 0.626 [0.602, 0.651] | 0.666 [0.642, 0.688] | 0.637 [0.612, 0.660] |
+| unsharp: a0.5_s0.5 | 0.663 [0.639, 0.686] | 0.648 [0.623, 0.671] | 0.671 [0.647, 0.693] | 0.646 [0.622, 0.670] |
+| zerodce: s1 | 0.669 [0.644, 0.691] | 0.624 [0.599, 0.649] | 0.668 [0.644, 0.691] | 0.639 [0.613, 0.663] |
+| nafnet: pre0 | 0.647 [0.620, 0.668] | 0.630 [0.605, 0.654] | 0.662 [0.639, 0.684] | 0.629 [0.605, 0.653] |
+| Low-light gate on the selected low-light arm: q10__gamma_gadaptive | 0.661 [0.636, 0.685] | 0.646 [0.620, 0.669] | 0.674 [0.650, 0.696] | 0.645 [0.619, 0.668] |
+| Deblur gate on the selected deblur arm: q50__unsharp_a0.5_s0.5 | 0.662 [0.637, 0.686] | 0.650 [0.624, 0.673] | 0.671 [0.647, 0.693] | 0.646 [0.622, 0.670] |
+
+### SurvFace open-set TPIR20@FPIR=0.3
+
+| Arm | ArcFace | AdaFace | MagFace | CurricularFace |
+|---|---|---|---|---|
+| Direct feed (resize) | 0.1917 [0.179, 0.205] | 0.1318 [0.120, 0.145] | 0.1785 [0.165, 0.190] | 0.1171 [0.107, 0.128] |
+| No-op (control): default | 0.1917 [0.179, 0.205] | 0.1318 [0.120, 0.145] | 0.1785 [0.165, 0.190] | 0.1171 [0.107, 0.128] |
+| bicubic: pre128 | 0.1899 [0.178, 0.203] | 0.1280 [0.116, 0.141] | 0.1689 [0.155, 0.181] | 0.1108 [0.100, 0.122] |
+| gamma: gadaptive | 0.1935 [0.181, 0.207] | 0.1153 [0.104, 0.128] | 0.1653 [0.154, 0.177] | 0.1162 [0.106, 0.127] |
+| clahe: c2_t2 | 0.1584 [0.145, 0.171] | 0.1233 [0.111, 0.137] | 0.1600 [0.149, 0.172] | 0.1059 [0.097, 0.118] |
+| unsharp: a0.5_s0.5 | 0.1926 [0.179, 0.206] | 0.1202 [0.108, 0.132] | 0.1754 [0.164, 0.188] | 0.1086 [0.099, 0.119] |
+| zerodce: s1 | 0.2015 [0.189, 0.214] | 0.1233 [0.111, 0.136] | 0.1868 [0.173, 0.199] | 0.1316 [0.121, 0.144] |
+| nafnet: pre0 | 0.1718 [0.158, 0.185] | 0.1173 [0.105, 0.130] | 0.1586 [0.146, 0.170] | 0.1115 [0.100, 0.122] |
+| Low-light gate on the selected low-light arm: q10__gamma_gadaptive | 0.1908 [0.178, 0.205] | 0.1289 [0.117, 0.142] | 0.1745 [0.162, 0.187] | 0.1139 [0.103, 0.125] |
+| Deblur gate on the selected deblur arm: q50__unsharp_a0.5_s0.5 | 0.1910 [0.178, 0.205] | 0.1180 [0.107, 0.130] | 0.1756 [0.164, 0.189] | 0.1072 [0.099, 0.118] |
+
+### Paired change vs direct feed on the same crops (eval subset; mean [95% CI])
+
+Drift = cosine between the restored and the direct-feed embedding of the same crop (1 = unchanged). Rank-1 delta = paired change in TinyFace rank-1 hit rate. Impostor shift > 0 = impostors look more similar.
+
+| Arm | Recognizer | Drift (TinyFace probes) | TinyFace Rank-1 delta | Impostor shift (TinyFace) | d' TinyFace | d' SurvFace 1:1 |
+|---|---|---|---|---|---|---|
+| No-op (control): default | arcface | 1.000 [1.000, 1.000] | +0.000 [0.000, 0.000] | +0.000 [0.000, 0.000] | -0.50 | 0.60 |
+| No-op (control): default | adaface | 1.000 [1.000, 1.000] | +0.000 [0.000, 0.000] | +0.000 [0.000, 0.000] | -0.41 | 0.56 |
+| No-op (control): default | magface | 1.000 [1.000, 1.000] | +0.000 [0.000, 0.000] | +0.000 [0.000, 0.000] | -0.44 | 0.65 |
+| No-op (control): default | curricularface | 1.000 [1.000, 1.000] | +0.000 [0.000, 0.000] | +0.000 [0.000, 0.000] | -0.47 | 0.54 |
+| bicubic: pre128 | arcface | 0.967 [0.966, 0.969] | -0.004 [-0.017, 0.009] | -0.003 [-0.004, -0.001] | -0.52 | 0.64 |
+| bicubic: pre128 | adaface | 0.965 [0.964, 0.967] | +0.010 [-0.003, 0.023] | -0.006 [-0.008, -0.005] | -0.39 | 0.59 |
+| bicubic: pre128 | magface | 0.976 [0.975, 0.977] | -0.018 [-0.032, -0.006] | +0.002 [0.000, 0.003] | -0.46 | 0.64 |
+| bicubic: pre128 | curricularface | 0.947 [0.945, 0.949] | -0.015 [-0.029, 0.000] | -0.004 [-0.006, -0.002] | -0.48 | 0.54 |
+| gamma: gadaptive | arcface | 0.987 [0.985, 0.989] | -0.002 [-0.012, 0.008] | +0.002 [0.002, 0.003] | -0.50 | 0.60 |
+| gamma: gadaptive | adaface | 0.978 [0.975, 0.981] | -0.011 [-0.020, -0.003] | +0.005 [0.004, 0.007] | -0.42 | 0.51 |
+| gamma: gadaptive | magface | 0.992 [0.990, 0.993] | -0.002 [-0.011, 0.008] | +0.004 [0.003, 0.004] | -0.44 | 0.64 |
+| gamma: gadaptive | curricularface | 0.984 [0.982, 0.986] | -0.009 [-0.020, 0.002] | +0.008 [0.007, 0.010] | -0.48 | 0.52 |
+| clahe: c2_t2 | arcface | 0.861 [0.857, 0.865] | -0.038 [-0.055, -0.021] | -0.006 [-0.009, -0.003] | -0.62 | 0.59 |
+| clahe: c2_t2 | adaface | 0.870 [0.866, 0.875] | -0.043 [-0.062, -0.025] | +0.011 [0.007, 0.014] | -0.54 | 0.46 |
+| clahe: c2_t2 | magface | 0.910 [0.907, 0.913] | -0.041 [-0.057, -0.023] | +0.007 [0.005, 0.009] | -0.54 | 0.63 |
+| clahe: c2_t2 | curricularface | 0.846 [0.842, 0.851] | -0.039 [-0.056, -0.021] | -0.000 [-0.004, 0.003] | -0.60 | 0.51 |
+| unsharp: a0.5_s0.5 | arcface | 0.992 [0.991, 0.992] | -0.010 [-0.019, 0.000] | +0.000 [-0.001, 0.001] | -0.52 | 0.60 |
+| unsharp: a0.5_s0.5 | adaface | 0.988 [0.987, 0.988] | -0.009 [-0.020, 0.002] | -0.000 [-0.001, 0.001] | -0.44 | 0.54 |
+| unsharp: a0.5_s0.5 | magface | 0.994 [0.994, 0.994] | -0.003 [-0.012, 0.005] | -0.001 [-0.001, 0.000] | -0.45 | 0.64 |
+| unsharp: a0.5_s0.5 | curricularface | 0.986 [0.986, 0.987] | -0.008 [-0.017, 0.003] | -0.001 [-0.002, 0.000] | -0.48 | 0.54 |
+| zerodce: s1 | arcface | 0.896 [0.893, 0.899] | -0.029 [-0.046, -0.014] | +0.010 [0.008, 0.013] | -0.57 | 0.63 |
+| zerodce: s1 | adaface | 0.872 [0.868, 0.876] | -0.029 [-0.047, -0.010] | +0.027 [0.024, 0.030] | -0.48 | 0.45 |
+| zerodce: s1 | magface | 0.926 [0.924, 0.928] | -0.023 [-0.037, -0.008] | +0.018 [0.016, 0.020] | -0.50 | 0.63 |
+| zerodce: s1 | curricularface | 0.879 [0.875, 0.882] | -0.023 [-0.038, -0.006] | +0.028 [0.025, 0.030] | -0.53 | 0.52 |
+| nafnet: pre0 | arcface | 0.910 [0.903, 0.915] | -0.022 [-0.039, -0.006] | -0.009 [-0.011, -0.006] | -0.58 | 0.54 |
+| nafnet: pre0 | adaface | 0.906 [0.899, 0.912] | -0.037 [-0.055, -0.020] | -0.002 [-0.005, 0.001] | -0.50 | 0.47 |
+| nafnet: pre0 | magface | 0.933 [0.927, 0.938] | -0.032 [-0.048, -0.016] | -0.007 [-0.010, -0.004] | -0.50 | 0.61 |
+| nafnet: pre0 | curricularface | 0.901 [0.894, 0.908] | -0.013 [-0.029, 0.002] | -0.009 [-0.012, -0.006] | -0.54 | 0.48 |
+| Low-light gate on the selected low-light arm: q10__gamma_gadaptive | arcface | 0.995 [0.993, 0.996] | -0.001 [-0.006, 0.003] | +0.001 [-0.000, 0.001] | -0.50 | 0.60 |
+| Low-light gate on the selected low-light arm: q10__gamma_gadaptive | adaface | 0.991 [0.988, 0.994] | -0.008 [-0.014, -0.003] | +0.001 [0.000, 0.002] | -0.41 | 0.54 |
+| Low-light gate on the selected low-light arm: q10__gamma_gadaptive | magface | 0.997 [0.995, 0.998] | -0.003 [-0.009, 0.003] | +0.001 [0.000, 0.001] | -0.44 | 0.65 |
+| Low-light gate on the selected low-light arm: q10__gamma_gadaptive | curricularface | 0.994 [0.992, 0.996] | -0.003 [-0.009, 0.003] | +0.002 [0.002, 0.003] | -0.48 | 0.54 |
+| Deblur gate on the selected deblur arm: q50__unsharp_a0.5_s0.5 | arcface | 0.999 [0.999, 0.999] | -0.001 [-0.004, 0.003] | -0.000 [-0.001, 0.000] | -0.50 | 0.60 |
+| Deblur gate on the selected deblur arm: q50__unsharp_a0.5_s0.5 | adaface | 0.998 [0.998, 0.998] | -0.002 [-0.005, 0.002] | -0.000 [-0.001, 0.000] | -0.41 | 0.55 |
+| Deblur gate on the selected deblur arm: q50__unsharp_a0.5_s0.5 | magface | 0.999 [0.999, 0.999] | -0.002 [-0.006, 0.003] | -0.000 [-0.001, 0.000] | -0.44 | 0.64 |
+| Deblur gate on the selected deblur arm: q50__unsharp_a0.5_s0.5 | curricularface | 0.998 [0.998, 0.998] | -0.002 [-0.006, 0.002] | -0.000 [-0.001, 0.000] | -0.47 | 0.54 |
+
+### Cost (s/crop; eval restoration on the device shown, smoke = 75 crops on CPU vs GPU)
+
+| Arm | Setting | Eval device | Eval s/crop median | Eval s/crop mean | Peak VRAM (MB) | Failed | Smoke CPU s/crop | Smoke GPU s/crop |
+|---|---|---|---|---|---|---|---|---|
+| bicubic | pre128 | cpu | n/a | 0.0121 | 0 | 0 | (CPU only) | (CPU only) |
+| gamma | gadaptive | cpu | 0.0117 | 0.0122 | 0 | 0 | (CPU only) | (CPU only) |
+| clahe | c2_t2 | cpu | 0.0117 | 0.0100 | 0 | 0 | (CPU only) | (CPU only) |
+| unsharp | a0.5_s0.5 | cpu | 0.0092 | 0.0076 | 0 | 0 | (CPU only) | (CPU only) |
+| zerodce | s1 | cuda | 0.0144 | 0.0154 | 13 | 0 | 0.0097 | 0.0110 |
+| nafnet | pre0 | cuda | 0.0046 | 0.0047 | 459 | 0 | 0.0293 | 0.0109 |
+
+### Tuning sweeps (tuning subset; score = mean over AdaFace, MagFace, CurricularFace of [TinyFace Rank-1, SurvFace verification AUC])
+
+**noop** (selected: default)
+
+| Setting | Score | Rank-1 | AUC |
+|---|---|---|---|
+| default | 0.5728 | 0.4826 | 0.6631 |
+
+**bicubic** (selected: pre128)
+
+| Setting | Score | Rank-1 | AUC |
+|---|---|---|---|
+| pre128 | 0.5701 | 0.4726 | 0.6676 |
+
+**gamma** (selected: gadaptive)
+
+| Setting | Score | Rank-1 | AUC |
+|---|---|---|---|
+| gadaptive | 0.5672 | 0.4826 | 0.6517 |
+| g0.7 | 0.5649 | 0.4826 | 0.6472 |
+| g0.5 | 0.5532 | 0.4677 | 0.6386 |
+
+**clahe** (selected: c2_t2)
+
+| Setting | Score | Rank-1 | AUC |
+|---|---|---|---|
+| c2_t2 | 0.5451 | 0.4378 | 0.6525 |
+| c1_t2 | 0.5436 | 0.4378 | 0.6493 |
+| c2_t4 | 0.5107 | 0.3881 | 0.6334 |
+| c1_t4 | 0.5106 | 0.3881 | 0.6332 |
+
+**unsharp** (selected: a0.5_s0.5)
+
+| Setting | Score | Rank-1 | AUC |
+|---|---|---|---|
+| a0.5_s0.5 | 0.5692 | 0.4726 | 0.6657 |
+| a1.0_s0.5 | 0.5630 | 0.4577 | 0.6682 |
+| a0.5_s1.0 | 0.5558 | 0.4428 | 0.6688 |
+| a1.0_s1.0 | 0.5503 | 0.4279 | 0.6728 |
+
+**zerodce** (selected: s1)
+
+| Setting | Score | Rank-1 | AUC |
+|---|---|---|---|
+| s1 | 0.5431 | 0.4378 | 0.6484 |
+
+**nafnet** (selected: pre0)
+
+| Setting | Score | Rank-1 | AUC |
+|---|---|---|---|
+| pre0 | 0.5548 | 0.4378 | 0.6719 |
+| pre128 | 0.5489 | 0.4378 | 0.6599 |
+
+**gate_lowlight** (selected: q10__gamma_gadaptive)
+
+| Setting | Score | Rank-1 | AUC |
+|---|---|---|---|
+| q10__gamma_gadaptive | 0.5720 | 0.4876 | 0.6565 |
+| q20__gamma_gadaptive | 0.5720 | 0.4876 | 0.6564 |
+| q30__gamma_gadaptive | 0.5702 | 0.4876 | 0.6529 |
+| q50__gamma_gadaptive | 0.5656 | 0.4776 | 0.6536 |
+
+**gate_deblur** (selected: q50__unsharp_a0.5_s0.5)
+
+| Setting | Score | Rank-1 | AUC |
+|---|---|---|---|
+| q50__unsharp_a0.5_s0.5 | 0.5763 | 0.4876 | 0.6651 |
+| q30__unsharp_a0.5_s0.5 | 0.5742 | 0.4826 | 0.6658 |
+| q20__unsharp_a0.5_s0.5 | 0.5736 | 0.4826 | 0.6645 |
+| q10__unsharp_a0.5_s0.5 | 0.5731 | 0.4826 | 0.6636 |
+
 <!-- TABLES:END -->
 <!-- EXTRA:BEGIN -->
 ### Probes-only restoration vs both sides restored (eval subset)
@@ -379,23 +635,109 @@ Probes / queries restored, gallery, distractors and templates left as direct fee
 
 ## 6. LFW synthetic check (dark, Gaussian blur, motion blur)
 <!-- LFW:BEGIN -->
+Degradations of the sharp 112 px LFW crops (6,000 official pairs); strengths chosen on direct feed only, before any arm was run (`lfw_enh_calibration.csv`): the strength whose mean non-leaky cross-degraded AUC is closest to 0.80 inside 0.70-0.90. Motion blur is a fixed 11 px line at a seeded angle (not tuned).
+
+| Degradation | Strength | Mean non-leaky cross AUC (direct) | In 0.70-0.90 |
+|---|---|---|---|
+| dark | 0.05 | 0.836 | yes |
+| gauss | 8 | 0.711 | yes |
+| motion | 11 | 0.999 | NO |
+
+Ceiling (sharp, sharp), mean non-leaky AUC: 0.9993.
+
+**Absolute verification AUC by condition**
+
+| Degradation | Condition | Arm | ArcFace | AdaFace | MagFace | CurricularFace |
+|---|---|---|---|---|---|---|
+| dark | ceiling (HR, HR) | noop | 0.999 | 0.999 | 0.999 | 0.999 |
+| dark | cross degraded (deg, HR) | noop | 0.832 | 0.893 | 0.817 | 0.798 |
+| dark | symmetric degraded (deg, deg) | noop | 0.734 | 0.815 | 0.754 | 0.705 |
+| dark | cross degraded (deg, HR) | gamma: gadaptive | 0.832 | 0.893 | 0.817 | 0.798 |
+| dark | symmetric degraded (deg, deg) | gamma: gadaptive | 0.734 | 0.815 | 0.754 | 0.705 |
+| dark | cross enhanced (enh, HR) | gamma: gadaptive | 0.824 | 0.840 | 0.814 | 0.734 |
+| dark | symmetric enhanced (enh, enh) | gamma: gadaptive | 0.761 | 0.795 | 0.769 | 0.731 |
+| dark | cross degraded (deg, HR) | clahe: c2_t2 | 0.832 | 0.893 | 0.817 | 0.798 |
+| dark | symmetric degraded (deg, deg) | clahe: c2_t2 | 0.734 | 0.815 | 0.754 | 0.705 |
+| dark | cross enhanced (enh, HR) | clahe: c2_t2 | 0.846 | 0.856 | 0.818 | 0.785 |
+| dark | symmetric enhanced (enh, enh) | clahe: c2_t2 | 0.757 | 0.788 | 0.760 | 0.720 |
+| dark | cross degraded (deg, HR) | zerodce: s1 | 0.832 | 0.893 | 0.817 | 0.798 |
+| dark | symmetric degraded (deg, deg) | zerodce: s1 | 0.734 | 0.815 | 0.754 | 0.705 |
+| dark | cross enhanced (enh, HR) | zerodce: s1 | 0.858 | 0.864 | 0.836 | 0.774 |
+| dark | symmetric enhanced (enh, enh) | zerodce: s1 | 0.776 | 0.811 | 0.784 | 0.748 |
+| gauss | ceiling (HR, HR) | noop | 0.999 | 0.999 | 0.999 | 0.999 |
+| gauss | cross degraded (deg, HR) | noop | 0.785 | 0.746 | 0.721 | 0.665 |
+| gauss | symmetric degraded (deg, deg) | noop | 0.871 | 0.828 | 0.849 | 0.774 |
+| gauss | cross degraded (deg, HR) | unsharp: a0.5_s0.5 | 0.785 | 0.746 | 0.721 | 0.665 |
+| gauss | symmetric degraded (deg, deg) | unsharp: a0.5_s0.5 | 0.871 | 0.828 | 0.849 | 0.774 |
+| gauss | cross enhanced (enh, HR) | unsharp: a0.5_s0.5 | 0.785 | 0.746 | 0.721 | 0.665 |
+| gauss | symmetric enhanced (enh, enh) | unsharp: a0.5_s0.5 | 0.871 | 0.828 | 0.849 | 0.774 |
+| gauss | cross degraded (deg, HR) | nafnet: pre0 | 0.785 | 0.746 | 0.721 | 0.665 |
+| gauss | symmetric degraded (deg, deg) | nafnet: pre0 | 0.871 | 0.828 | 0.849 | 0.774 |
+| gauss | cross enhanced (enh, HR) | nafnet: pre0 | 0.857 | 0.823 | 0.795 | 0.757 |
+| gauss | symmetric enhanced (enh, enh) | nafnet: pre0 | 0.895 | 0.860 | 0.873 | 0.828 |
+| motion | ceiling (HR, HR) | noop | 0.999 | 0.999 | 0.999 | 0.999 |
+| motion | cross degraded (deg, HR) | noop | 0.998 | 0.999 | 0.999 | 0.998 |
+| motion | symmetric degraded (deg, deg) | noop | 0.995 | 0.988 | 0.992 | 0.989 |
+| motion | cross degraded (deg, HR) | unsharp: a0.5_s0.5 | 0.998 | 0.999 | 0.999 | 0.998 |
+| motion | symmetric degraded (deg, deg) | unsharp: a0.5_s0.5 | 0.995 | 0.988 | 0.992 | 0.989 |
+| motion | cross enhanced (enh, HR) | unsharp: a0.5_s0.5 | 0.998 | 0.999 | 0.999 | 0.998 |
+| motion | symmetric enhanced (enh, enh) | unsharp: a0.5_s0.5 | 0.995 | 0.988 | 0.991 | 0.989 |
+| motion | cross degraded (deg, HR) | nafnet: pre0 | 0.998 | 0.999 | 0.999 | 0.998 |
+| motion | symmetric degraded (deg, deg) | nafnet: pre0 | 0.995 | 0.988 | 0.992 | 0.989 |
+| motion | cross enhanced (enh, HR) | nafnet: pre0 | 0.999 | 0.999 | 1.000 | 0.999 |
+| motion | symmetric enhanced (enh, enh) | nafnet: pre0 | 0.999 | 0.999 | 1.000 | 0.999 |
+
+**Pre-registered contrast: cross-enhanced minus cross-degraded AUC** (rule: CI above zero for at least 2 of the 3 non-leaky recognizers). noop is the degraded crop itself, so this is also the contrast against no-op.
+
+| Degradation | Arm | ArcFace | AdaFace | MagFace | CurricularFace | Non-leaky positive | Rule |
+|---|---|---|---|---|---|---|---|
+| dark | gamma: gadaptive | -0.008 [-0.015, -0.000] | -0.053 [-0.059, -0.046] | -0.003 [-0.010, +0.005] | -0.064 [-0.073, -0.055] | 0 of 3 | not supported |
+| dark | clahe: c2_t2 | +0.014 [+0.011, +0.017] | -0.037 [-0.041, -0.033] | +0.001 [-0.003, +0.005] | -0.013 [-0.017, -0.008] | 0 of 3 | not supported |
+| dark | zerodce: s1 | +0.026 [+0.020, +0.032] | -0.029 [-0.033, -0.025] | +0.019 [+0.013, +0.026] | -0.024 [-0.032, -0.017] | 1 of 3 | not supported |
+| gauss | unsharp: a0.5_s0.5 | +0.000 [+0.000, +0.000] | +0.000 [+0.000, +0.000] | +0.000 [+0.000, +0.000] | +0.000 [+0.000, +0.000] | 0 of 3 | not supported |
+| gauss | nafnet: pre0 | +0.073 [+0.067, +0.079] | +0.077 [+0.070, +0.083] | +0.074 [+0.068, +0.080] | +0.092 [+0.083, +0.100] | 3 of 3 | met |
+| motion | unsharp: a0.5_s0.5 | -0.000 [-0.000, -0.000] | -0.000 [-0.000, +0.000] | -0.000 [-0.000, +0.000] | -0.000 [-0.000, -0.000] | 0 of 3 | not supported |
+| motion | nafnet: pre0 | +0.001 [+0.000, +0.002] | +0.001 [+0.000, +0.001] | +0.001 [+0.000, +0.002] | +0.001 [+0.000, +0.001] | 3 of 3 | met |
+
+**Same contrast with both images degraded (symmetric)**
+
+| Degradation | Arm | ArcFace | AdaFace | MagFace | CurricularFace |
+|---|---|---|---|---|---|
+| dark | gamma: gadaptive | +0.028 [+0.020, +0.035] | -0.020 [-0.026, -0.013] | +0.015 [+0.007, +0.023] | +0.026 [+0.018, +0.033] |
+| dark | clahe: c2_t2 | +0.024 [+0.021, +0.028] | -0.026 [-0.030, -0.022] | +0.006 [+0.001, +0.010] | +0.014 [+0.010, +0.019] |
+| dark | zerodce: s1 | +0.043 [+0.037, +0.049] | -0.004 [-0.008, +0.001] | +0.030 [+0.023, +0.036] | +0.043 [+0.036, +0.050] |
+| gauss | unsharp: a0.5_s0.5 | +0.000 [+0.000, +0.000] | +0.000 [+0.000, +0.000] | +0.000 [+0.000, +0.000] | +0.000 [+0.000, +0.000] |
+| gauss | nafnet: pre0 | +0.024 [+0.020, +0.028] | +0.032 [+0.027, +0.037] | +0.024 [+0.020, +0.028] | +0.054 [+0.047, +0.062] |
+| motion | unsharp: a0.5_s0.5 | -0.000 [-0.000, -0.000] | -0.000 [-0.000, -0.000] | -0.000 [-0.001, -0.000] | -0.000 [-0.001, -0.000] |
+| motion | nafnet: pre0 | +0.004 [+0.003, +0.006] | +0.011 [+0.009, +0.013] | +0.008 [+0.006, +0.010] | +0.010 [+0.008, +0.012] |
+
 <!-- LFW:END -->
 
 ## 7. Labelled visual samples
-_To be filled._
+Random, seeded (42) crops, identical for every method, never picked by outcome: dark examples from the darkest-10% bin (`outputs/enhance/samples/dark_tinyface.png`, `dark_survface.png`), blur examples from the low-sharpness bin (`blur_tinyface.png`, `blur_survface.png`). Each row is labelled with dataset, crop name, size and the problem seen. Failure sheets per arm (identity changed, lost matches, random) are in `outputs/enhance/failure_cases/`; strips for the brief are `docs/figures/enh_*.png`.
+
+What the samples show (visual judgement, not a measured result):
+- **gamma and Zero-DCE++** brighten the face but reveal colour casts, saturated pixels around the eyes and block patterns of the compressed source; Zero-DCE++ adds a pink tint.
+- **CLAHE** raises contrast strongly and amplifies noise and block edges; it looks the most altered.
+- **unsharp** is almost indistinguishable from the input at these sizes.
+- **NAFNet** gives slightly crisper edges around eyes and mouth with no obvious invented detail in these samples, but it cannot recover the lost resolution.
 
 ## 8. Cost: s/crop on CPU and GPU
-_To be filled. Smoke run (75 crops, median s/crop, CPU / GPU): Zero-DCE++ 0.0097 / 0.0109; NAFNet native 0.029 / 0.0109; NAFNet pre-128 0.331 / 0.0236._
+Eval-subset restoration timings and the 75-crop smoke CPU/GPU comparison are in the generated cost table in section 5 (the tables block). All arms cost milliseconds per crop at these sizes: the OpenCV arms about 0.008-0.012 s/crop on CPU; Zero-DCE++ about 0.010 s/crop on CPU and 0.011 on GPU (no speedup, the model has about 10k parameters); NAFNet native 0.029 s/crop on CPU against 0.011 on GPU in the smoke run (0.0047 s/crop measured in the batched eval run, peak VRAM 459 MB); NAFNet pre-128 0.331 s/crop on CPU against 0.024 on GPU in the smoke run. Cost is not a reason for or against any arm.
 
 ## 9. Full tables (generated)
 _Injected between the markers above._
 
 ## 10. Limitations
-- The `lap_var` gate is size-confounded (Phase 2).
-- Size of the dark bin.
-- Synthetic LFW degradations.
-- Multiplicity (up to 10 tests).
-- A different GPU from Phase 3 (RTX 3000 laptop, not the lab PC).
+- **lap_var gate is size-confounded** (Phase 2): the deblur gate partly selects small crops.
+- **Dark-bin size:** 236 dark probes (98 in dark10), so their intervals are wide and a small gain could not be excluded there; the point estimates are still all at or below zero.
+- **Synthetic LFW degradations:** dark = scaling plus Poisson-Gaussian noise, blur = Gaussian sigma 8; neither is the degradation of real TinyFace or SurvFace probes. The strengths come from a coarse grid (dark s = 0.05 gives cross-AUC 0.836, above the 0.80 target; no grid value fell between 0.05 and 0.03). The fixed 11 px motion blur barely degrades recognition (direct cross-AUC 0.9985, out of the 0.70-0.90 range), so the motion rows cannot discriminate arms; its formal "met" result for NAFNet is a ceiling effect (+0.0006 to +0.0009).
+- **Multiplicity:** 8 tests on the stop rule (up to 10 allowed); the Bonferroni sensitivity CIs lead to the same verdict.
+- **Different GPU from Phase 3:** a laptop RTX 3000, not the lab-PC RTX 4000 Ada; all Phase 4 numbers use one device, so the paired comparisons are internally consistent, but absolute values can differ slightly from Phase 3 (cross-device cosine above 0.9999).
+- **LFW check scope:** only the arms' selected settings were run, at 112 px; the gated variants were not run on LFW; noop equals the degraded crop, so the contrast against noop equals the contrast against cross-degraded.
+- **Thumbnails:** the uploaded thumbnails are a seeded sample, not every eval crop (see the upload manifest).
 
 ## 11. Decision for Phase 8
-_The gate arm with its τ, or "restoration closed"._
+**Restoration closed.** No low-light or deblur arm, and no gated variant, gives a probes-only recognition gain with a 95% CI above zero, so none becomes the Phase 8 gate arm. Direct feed stays the default for Phase 8. The one positive signal (NAFNet on synthetic Gaussian blur) is recorded as a result but does not carry over to real probes,, so it does not reopen the engine.
+
+*Pending supervisor approval at the end-of-W2 checkpoint.*

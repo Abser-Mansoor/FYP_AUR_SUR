@@ -103,6 +103,10 @@ def cost_table(res, arm_rows):
         if isinstance(pair, dict):
             pair = pair.get(st)
         c_cpu, c_gpu = (sm(pair[0]), sm(pair[1])) if pair else ("n/a", "n/a")
-        out.append(f"| {arm} | {st} | {t.get('device', 'cpu')} | {t.get('sec_per_crop_median') or 0:.4f} | {t.get('sec_per_crop_mean') or 0:.4f} | "
+        med = f"{t['sec_per_crop_median']:.4f}" if t.get("sec_per_crop_median") else "n/a"
+        mean = f"{t['sec_per_crop_mean']:.4f}" if t.get("sec_per_crop_mean") else "n/a"
+        if pair is None and t.get("device", "cpu") == "cpu":
+            c_cpu, c_gpu = "(CPU only)", "(CPU only)"
+        out.append(f"| {arm} | {st} | {t.get('device', 'cpu')} | {med} | {mean} | "
                    f"{t.get('peak_vram_mb') or 0:.0f} | {t.get('n_failed', 0)} | {c_cpu} | {c_gpu} |")
     return out + [""]
