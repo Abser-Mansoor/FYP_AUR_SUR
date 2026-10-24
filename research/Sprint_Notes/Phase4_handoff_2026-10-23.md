@@ -1,3 +1,5 @@
+# SUPERSEDED 2026-10-24: Phase 4 work is finished (see the end of this file for what remains: push/PR and supervisor approval).
+
 # Phase 4 handoff (written 2026-10-23, about 21:35)
 
 Give this file to Claude at the start of the next session and say "continue Phase 4 from this handoff". The runbook is `research/Sprint_Notes/Phase4_restoration_runbook.md`; this file records where the work stopped.
@@ -40,3 +42,7 @@ Check: `Get-Process python`, `nvidia-smi`, and whether those output files exist.
 - `Timing`/runners: NAFNet loads all crops into memory before the first output appears (about 4-5 min of silence on the eval subset); that is normal.
 - Tool quirks in this environment: long `sleep` in a tool call is blocked (use short checks or `run_in_background`); in Bash heredocs a literal backslash-n gets turned into a real newline, so write patch scripts to files with the Write tool or use `chr(92)`; background jobs launched from a tool call can be killed on session interruption.
 - Files changed this phase: `scripts/{sr_pipeline,sr_extra_analysis,sr_report_tables,sr_failure_cases,sr_sample_figs,sr_brief_strips}.py`, `src/sr/{eval,common}.py`; new `scripts/{enh_xcheck,enh_gate,enh_lfw_check,enh_tables,enh_samples,phase4_upload}.py`, `src/sr/run_{photometric,zerodce,nafnet}.py`, `configs/enhance.yaml`, `REPORT_phase4.md`.
+
+
+## 2026-10-24 completion
+LFW calibration, restore and score, report tables, figures, `REPORT_phase4.md` (verdict: restoration closed) and the upload zip `results_2026-10-24.zip` on the Drive are done and committed on `phase_4`. Remaining: Raghib decides whether to push `phase_4` and open the PR to `main` for Abser; then STOP for supervisor approval.

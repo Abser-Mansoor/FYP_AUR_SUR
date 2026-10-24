@@ -1,4 +1,4 @@
-# REPORT — Phase 4: non-generative low-light and deblur test (draft)
+# REPORT — Phase 4: non-generative low-light and deblur test
 
 **Status:** complete, pending supervisor approval (end-of-W2 checkpoint). The rules in section 0 were written and committed **before** the eval subset was scored (see the git history of this file).
 
