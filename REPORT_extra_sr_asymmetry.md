@@ -260,3 +260,53 @@ After the results above, Abser asked for two further things: to run H2, H3, H5 a
    - **Criterion per variant:** on the larger-penalty dataset the CI of the mean norm change is entirely above zero, **and** the CI of the mean genuine-similarity change is not entirely above zero (no matching gain). The verdict rule is the one of the first addendum (supported if more than half of the 4 variants meet it, not supported if fewer than a third, else inconclusive).
    - The Spearman correlation between the per-probe norm change and the per-probe genuine-similarity change is reported for each variant and dataset as a descriptive number only.
    - The MagFace norm is a property of the MagFace model, so H7 uses MagFace only.
+
+
+---
+
+# Exploratory extension: results (H2, H3, H5, H6 and H7 on 4 variants)
+
+This section follows the second addendum. It is exploratory: the pre-registered stop rule was deliberately overridden at Abser's request, and H7 needed new MagFace inference. The verdicts above (H1 supported, H4 supported) are unchanged. Files are in `outputs/sr/results/asymmetry_exploratory/`. The stage-2 script and the H7 script were each run twice and every output file is byte-identical (`determinism_hashes.txt`). The first-pass files in that folder (E0, H4, the TinyFace pair list) are identical to those in `outputs/sr/results/asymmetry/`, and the verdict table marks H2, H3, H5 and H6 as `exploratory`.
+
+## Summary of the extension
+- **None of H2, H3, H5 and H6 explains the residual SurvFace gap.** All four are "not supported" by the verdict rule of the first addendum (H2 1 of 18 cells, H3 0 of 18, H5 1 of 18, H6 4 of 36).
+- **H7 is supported in 3 of 4 variants** (Real-ESRGAN, InvSR pre-64, TADSR, all on SurvFace, which is the larger-penalty dataset for them): MagFace's raw norm goes up while the genuine similarity goes down. The effect is small for InvSR and TADSR (+0.34 and +0.36 on a norm of about 21) and larger for Real-ESRGAN (+1.23, about +6%). It is not specific to the larger-penalty dataset: Real-ESRGAN raises the norm on TinyFace as much (+1.26).
+- **Preprocessing checks for H7 passed:** the new flip-summed embeddings equal the cached Phase 3 MagFace embeddings (minimum cosine 0.9999998 for direct feed and all four variants), and the new direct-feed norms of the 1,155 TinyFace probes equal the Phase 2 measure (maximum relative difference 5.3e-05).
+
+## H2 (input information): not supported
+Per probe, the change in genuine similarity (restored minus direct) was compared between the datasets on matched strata (`h2_matched_strata.csv`, `h2_binned_delta_genuine.csv`). With the pre-registered strata (`size_q` × `sharp_bin_sz`, 6 strata present in both datasets) the matched gap is at most half the unmatched gap in 1 of 18 cells; the median shrinkage is -16%, so matching usually makes the gap larger. The sensitivity version with pooled pixel-size strata (8 common strata) meets the criterion in 3 of 18 cells (median shrinkage +1%). The unmatched gap itself is small to begin with (mean -0.0035 over the 18 cells), so "shrinks by half" has little to shrink. TinyFace probes are concentrated in one size bin (1,088 of 1,155 are 25 to 32 px) while SurvFace spans all bins, so the overlap between the datasets is limited, and the pre-registered strata are matched by rank within each dataset, not by pixel size (first addendum, point 7).
+
+## H3 (distractor composition, TinyFace only): not supported
+Keeping the 4,000 distractors at direct feed changes the TinyFace Rank-1 change by +0.0085 on average (over 18 cells), against a mean CI half-width of 0.0215; no cell exceeds its half-width (`h3_distractors.csv`). The change in the best impostor cosine per probe (restored minus direct, both sides restored) averages -0.051 for gallery-match impostors and -0.068 for distractor impostors (`h3_impostor_split.csv`); these are best-match scores, not the pair means of H4.
+
+## H5 (camera domain): not supported
+- **Camera predictability** (leave-one-out kNN, k = 5, on the SurvFace gallery): direct feed 0.720 on average; restoration changes it by -0.050 on average. The CI is above zero in 1 of 18 cells and below zero in 11 of 18, so restoration mostly makes the camera less predictable, not more (`h5_knn_camera.csv`).
+- **Same-camera against cross-camera on mated comparisons: not testable.** Every mated query-gallery pair (340,677 per recognizer) is cross-camera (`h5_camera_pairs.csv`).
+- **Supplementary (not part of the verdict):** gallery-against-gallery pairs of the same identity (171,985 same-camera, 80,046 cross-camera). The mean cosine change is -0.077 for same-camera and -0.054 for cross-camera pairs, so restoration hurts same-camera pairs more; the pre-registered direction (cross-camera hurt more) holds in 2 of 18 cells (`h5_supplementary_gallery_pairs.csv`).
+
+## H6 (open-set threshold, SurvFace): not supported
+The change in TPIR@FPIR=0.3 was split into a mated-score part (the direct-feed threshold applied to the restored scores) and a threshold-shift part (the remainder). Averaged over the cells, with both sides restored the total change is -0.021, the mated-score part is -0.052 and the threshold-shift part is +0.030; with probes only the total is -0.050, the mated-score part -0.098 and the threshold-shift part +0.048 (`h6_threshold_split.csv`). The threshold shift is larger in absolute size than the mated part in 4 of 36 cells. The mated scores drive the loss, and the threshold moves in the opposite direction (the threshold-shift part is positive in 32 of 36 cells, the mated part is negative in 34 of 36). The split follows the first addendum, point 11.
+
+## H7 (quality inflation, 4 variants): supported in 3 of 4
+| Variant | Dataset | Larger penalty (MagFace AUC change, both sides) | Mean norm direct -> restored | Norm change [95% CI] | Genuine-similarity change [95% CI] | Spearman (per probe) | Criterion met |
+|---|---|---|---|---|---|---|---|
+| bicubic: pre512 | tinyface | yes (-0.0024) | 22.21 -> 22.11 | -0.098 [-0.137, -0.061] | +0.0034 [+0.0017, +0.0050] | -0.03 | no |
+| bicubic: pre512 | survface | no (-0.0018) | 21.28 -> 21.61 | +0.321 [+0.299, +0.345] | -0.0035 [-0.0042, -0.0027] | -0.06 | no |
+| esrgan: native | tinyface | no (+0.0069) | 22.21 -> 23.46 | +1.257 [+1.117, +1.391] | -0.0356 [-0.0420, -0.0288] | +0.09 | no |
+| esrgan: native | survface | yes (-0.0015) | 21.28 -> 22.51 | +1.231 [+1.160, +1.303] | -0.0071 [-0.0097, -0.0046] | -0.04 | yes |
+| invsr: pre64_st1 | tinyface | no (-0.0236) | 22.21 -> 22.45 | +0.239 [+0.089, +0.387] | -0.0894 [-0.0967, -0.0817] | +0.06 | no |
+| invsr: pre64_st1 | survface | yes (-0.0790) | 21.28 -> 21.62 | +0.339 [+0.242, +0.430] | -0.1045 [-0.1077, -0.1013] | -0.15 | yes |
+| tadsr: pre128_t250 | tinyface | no (+0.0541) | 22.21 -> 22.00 | -0.212 [-0.332, -0.101] | -0.0845 [-0.0897, -0.0784] | +0.13 | no |
+| tadsr: pre128_t250 | survface | yes (-0.0263) | 21.28 -> 21.64 | +0.361 [+0.317, +0.408] | -0.0492 [-0.0510, -0.0476] | +0.04 | yes |
+
+Reading: a variant meets the criterion if, on the larger-penalty dataset, the norm CI is above zero and the genuine-similarity CI is not above zero. Real-ESRGAN, InvSR pre-64 and TADSR meet it on SurvFace. Bicubic does not: its larger-penalty dataset is TinyFace, where the norm falls slightly. The penalties that define the larger-penalty dataset are tiny for bicubic and Real-ESRGAN (differences of 0.0006 and 0.0084 in AUC change), so that choice is fragile there. Per probe, the norm change and the genuine-similarity change are only weakly related (Spearman -0.15 to +0.13), so a larger norm gain does not go with a larger loss of similarity for the same crop. Only OSDFace and InvSR pre-128 are not covered, because their full-size restorations are not on this PC.
+
+## What the extension adds to section 5
+The first-pass conclusion stands: the SurvFace-versus-TinyFace difference is mostly a protocol artefact (H1) and restoration makes faces more alike on both datasets (H4). The extension rules out four candidate explanations for the residual gap in this data (crop size and sharpness, distractor composition, camera domain, open-set threshold), and finds that restored crops tend to look higher quality to MagFace without being more similar to their own identity (H7). That quality inflation appears on both datasets and is strongest for Real-ESRGAN, so it does not explain why SurvFace would be hit harder; it is a general property of some restorers.
+
+## Limitations of the extension
+- Exploratory: the stop rule was overridden, so the five verdicts are not pre-registered conclusions; no correction was made for running them after H1.
+- H7 covers 4 of 6 variants and MagFace only (the norm is a MagFace property), and uses new inference on the lab-PC GPU; OSDFace and InvSR pre-128 are missing.
+- H2's matching has the limits described above (rank-matched strata, little size overlap between the datasets).
+- H5's pre-registered same-camera test is impossible on mated pairs; the supplementary comparison uses gallery pairs, which are a different population.
+- The H6 split is one of two reasonable decompositions (the other order would give different parts); the sum is fixed.
