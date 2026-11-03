@@ -1,0 +1,32 @@
+{
+ "models/caface/CAFace_AdaFaceWebFace4M.ckpt": {
+  "source": "https://drive.google.com/file/d/1a-nrXcX_h8sLQiTD_mGvmKAG58gE9Oi5",
+  "bytes": 284874947,
+  "sha256": "c72c3e2c4f2a65b1ecdd4b81f15d963a04e89d296b2dc15c99cae2c5034744ca"
+ },
+ "models/caface/center_WebFace4MAdaFace_webface4m_subset.pth": {
+  "source": "https://drive.google.com/file/d/1WmiWjLSsfQU2PTwQAvnrep9u6Jfvd3tR",
+  "bytes": 20481003,
+  "sha256": "9a0a05cf484587e5d535fc8e5403d6a52e3de5a38850bebfb673afac74b2f391"
+ },
+ "models/caface/adaface_ir101_webface4m.ckpt": {
+  "source": "https://drive.google.com/file/d/18jQkqB0avFqWa0Pas52g54xNshUOQJpQ",
+  "bytes": 683066959,
+  "sha256": "0a379dbaf7d79573d1ff63f317c0296f3adfb637b9c00b6234fdcc53a77a0f61"
+ },
+ "models/facemoe/swin4m_exp_3_k_2_briar_full/model.pt": {
+  "source": "https://huggingface.co/kartiknarayan/FaceMoE/blob/main/swin4m_exp_3_k_2_briar_full/model.pt",
+  "bytes": 1856658185,
+  "sha256": "57087ca1e108ff5e6f59e13295e76e65f6d96e35111690d2c88fc9a474d6363c"
+ },
+ "models/facemoe/swin4m_exp_3_k_2_tinyface_full/model.pt": {
+  "source": "https://huggingface.co/kartiknarayan/FaceMoE/blob/main/swin4m_exp_3_k_2_tinyface_full/model.pt",
+  "bytes": 1856658185,
+  "sha256": "af218f8c5fe78f5c884a4c2ef22276261303797b6aea6f518d83f5e8f5dd6014"
+ },
+ "models/facemoe/README.md": {
+  "source": "https://huggingface.co/kartiknarayan/FaceMoE/blob/main/README.md",
+  "bytes": 3079,
+  "sha256": "84fc25987e33865ea6a2a71eaf8a98ccece1f765d8cacb8b9afc05f2536fedec"
+ }
+}

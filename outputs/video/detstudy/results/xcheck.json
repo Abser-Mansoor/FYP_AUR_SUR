@@ -1,0 +1,8 @@
+{
+ "n": 100,
+ "n_detected_here": 90,
+ "n_detected_lab": 90,
+ "n_detection_mismatch": 0,
+ "max_abs_diff_px": 0.0031337738037109375,
+ "pass_": true
+}

@@ -1,0 +1,9 @@
+{
+ "scrfd__full640": 1,
+ "scrfd__full1280": 1,
+ "scrfd__tiled": 1,
+ "retinaface__full640": 1,
+ "retinaface__full1280": 1,
+ "retinaface__tiled": 1,
+ "pass": true
+}

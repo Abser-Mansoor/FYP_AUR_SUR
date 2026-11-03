@@ -1,0 +1,36 @@
+[
+ {
+  "tracker": "bytetrack",
+  "id_switches": 0,
+  "dominant_id_fraction": {
+   "0": 1.0,
+   "1": 1.0
+  },
+  "ids_per_object": {
+   "0": [
+    1
+   ],
+   "1": [
+    2
+   ]
+  },
+  "ok": true
+ },
+ {
+  "tracker": "botsort",
+  "id_switches": 0,
+  "dominant_id_fraction": {
+   "0": 1.0,
+   "1": 1.0
+  },
+  "ids_per_object": {
+   "0": [
+    1
+   ],
+   "1": [
+    2
+   ]
+  },
+  "ok": true
+ }
+]

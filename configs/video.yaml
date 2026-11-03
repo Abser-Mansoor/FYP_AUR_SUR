@@ -10,7 +10,7 @@ paths:
   gt: outputs/video/gt
   eval_crops: outputs/sr/subset/eval_input        # TinyFace / SurvFace eval subset crops (Phase 3), file names in eval_images.csv
   eval_images: outputs/sr/subset/eval_images.csv
-  out: outputs/video/detstudy
+  out: outputs/video/detstudy_v2     # v2: SCRFD with the official WIDER preprocessing (outputs/video/detstudy holds the first, superseded run)
 
 detectors:
   scrfd: models/detector/det_10g.onnx
@@ -21,8 +21,11 @@ detectors:
 modes: [full640, full1280, tiled]
 detect_thresh: 0.02          # detectors keep everything above this; scoring applies its own threshold
 score_thresholds: [0.5, 0.3] # recall / false positives are reported at both
-nms: 0.4
+nms: 0.4                     # RetinaFace NMS and the tile-merge NMS
 iou: 0.5
+# SCRFD in this study follows insightface's WIDER test script (mode 0, scrfd_10g_bnkps.py): grey padding after normalisation, rounded
+# resize, NMS 0.45. The crop job and the cross-device check keep the unchanged Phase 1 path (preprocess legacy, NMS 0.4).
+scrfd: {preprocess: official, nms: 0.45}
 
 # face-height bins in px (WIDER and ChokePoint recall)
 bins: [[0, 10], [10, 16], [16, 24], [24, 32], [32, 64], [64, 1000000]]

@@ -1,0 +1,11 @@
+{
+ "n": 500,
+ "same_detection_count": 499,
+ "max_box_diff_px_when_same_count": 3.877685546875,
+ "kps_shape_ok": true,
+ "ap": {
+  "easy": 0.9651627268941672,
+  "medium": 0.9566463427648481,
+  "hard": 0.8615172986296672
+ }
+}

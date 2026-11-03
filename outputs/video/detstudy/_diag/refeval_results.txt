@@ -1,0 +1,15 @@
+Reference WIDER evaluation (wondervictor/WiderFace-Evaluation evaluation.py, unmodified, run with a NumPy stand-in for its compiled bbox_overlaps: refeval_shim_bbox.py)
+
+== stored T4 scrfd__full640 detections (first run, study preprocessing); input written by refeval_dump_preds.py
+====================
+Easy   Val AP: 0.9484639341384087
+Medium Val AP: 0.9346212597882659
+Hard   Val AP: 0.8127933049179324
+====================
+
+== CPU run, official preprocessing, all 3,226 images, score floor 0.02
+====================
+Easy   Val AP: 0.9499114716685647
+Medium Val AP: 0.9360448485837546
+Hard   Val AP: 0.824240284086301
+====================

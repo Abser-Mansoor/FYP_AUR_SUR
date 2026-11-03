@@ -37,9 +37,14 @@ def device_info(out):
     return d
 
 
-def build_detector(name, cfg, root):
+def build_detector(name, cfg, root, protocol="study"):
+    """protocol "study": the detector settings of this study (SCRFD: cfg["scrfd"], the official WIDER preprocessing and NMS).
+    protocol "phase1": the unchanged Phase 1 SCRFD path; used for the TinyFace / SurvFace crop job and the cross-device check, which
+    must stay comparable with the Phase 1 landmarks."""
     if name == "scrfd":
-        return D.SCRFDDetector(root / cfg["detectors"]["scrfd"], thresh=cfg["detect_thresh"], nms=cfg["nms"])
+        sc = cfg.get("scrfd", {}) if protocol == "study" else {}
+        return D.SCRFDDetector(root / cfg["detectors"]["scrfd"], thresh=cfg["detect_thresh"], nms=sc.get("nms", cfg["nms"]),
+                               preprocess=sc.get("preprocess", "legacy"))
     return D.RetinaFaceDetector(root / cfg["detectors"]["retinaface"], thresh=cfg["detect_thresh"], nms=cfg["nms"])
 
 
@@ -125,7 +130,7 @@ def job_xcheck(cfg, root, out, xdir):
     writes it). SCRFD padded-crop landmarks must agree within 0.5 px."""
     xdir = Path(xdir)
     files = sorted((xdir / "crops").glob("*.png"))
-    det = build_detector("scrfd", cfg, root)
+    det = build_detector("scrfd", cfg, root, "phase1")
     kps = np.stack([np.full((5, 2), np.nan) if (k := D.crop_detect(det, C.read_bgr(f), cfg["crops"]["lowres_side"], cfg["crops"]["thresh"])) is None
                     else k for f in files]).astype(np.float32)
     ref = xdir / "lab_kps.npy"
@@ -175,7 +180,7 @@ def main():
         items = {"wider": wider_items, "chokepoint": sample_items, "crops": crop_items}[job](cfg, root)
         items = items[:a.limit] if a.limit else items
         for name in a.detectors:
-            det = build_detector(name, cfg, root)
+            det = build_detector(name, cfg, root, "phase1" if job == "crops" else "study")
             if job == "crops":
                 run_chunks(job, det, f"{name}__crop", items, lambda d, im: D.crop_detect(d, im, cfg["crops"]["lowres_side"], cfg["crops"]["thresh"]),
                            chunk, out, kind="kps")

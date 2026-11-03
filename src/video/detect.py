@@ -26,12 +26,52 @@ MODES = {"full640": ("full", 640), "full1280": ("full", 1280), "tiled": ("tiled"
 class SCRFDDetector:
     name = "scrfd"
 
-    def __init__(self, model_file, providers=("CUDAExecutionProvider", "CPUExecutionProvider"), thresh=0.02, nms=NMS):
+    def __init__(self, model_file, providers=("CUDAExecutionProvider", "CPUExecutionProvider"), thresh=0.02, nms=NMS, preprocess="legacy"):
+        """preprocess: "legacy" = src/align.py:SCRFD.detect unchanged (Phases 1-4 and the crop protocol);
+        "official" = the insightface WIDER test preprocessing (see _detect_official), used for the Phase 5 detector study."""
+        assert preprocess in ("legacy", "official"), preprocess
         self.det = SCRFD(str(model_file), providers)
-        self.thresh, self.nms = thresh, nms
+        self.thresh, self.nms, self.preprocess = thresh, nms, preprocess
 
     def detect(self, bgr, size=640, thresh=None):
-        return self.det.detect(bgr, (size, size), self.thresh if thresh is None else thresh, self.nms)
+        thresh = self.thresh if thresh is None else thresh
+        if self.preprocess == "legacy":
+            return self.det.detect(bgr, (size, size), thresh, self.nms)
+        return self._detect_official(bgr, size, thresh)
+
+    def _detect_official(self, bgr, size, thresh):
+        """Same preprocessing as insightface detection/scrfd/tools/test_widerface.py (mode 0) with scrfd_10g_bnkps.py: resize keeping the
+        aspect ratio so the longest side is `size` (new size rounded, bilinear), normalise (x - 127.5) / 128 in RGB, then pad right and
+        bottom with 0 AFTER normalising (mid-grey), single scale, no flip; boxes rescaled by the actual per-axis resize factors."""
+        d = self.det
+        h, w = bgr.shape[:2]
+        r = min(size / h, size / w)
+        nh, nw = int(h * r + 0.5), int(w * r + 0.5)
+        im = (cv2.resize(bgr, (nw, nh), interpolation=cv2.INTER_LINEAR)[:, :, ::-1].astype(np.float32) - 127.5) / 128.0
+        blob = np.zeros((1, 3, size, size), np.float32)
+        blob[0, :, :nh, :nw] = im.transpose(2, 0, 1)
+        outs = d.sess.run(d.output_names, {d.input_name: blob})
+        batched = outs[0].ndim == 3
+        sc_l, bx_l, kp_l = [], [], []
+        for i, s in enumerate(d.strides):
+            sc, bb, kp = outs[i], outs[i + 3] * s, outs[i + 6] * s
+            if batched:
+                sc, bb, kp = sc[0], bb[0], kp[0]
+            c = d._anchor_centers(size // s, size // s, s)
+            keep = np.where(sc.ravel() >= thresh)[0]
+            box = np.stack([c[:, 0] - bb[:, 0], c[:, 1] - bb[:, 1], c[:, 0] + bb[:, 2], c[:, 1] + bb[:, 3]], -1)
+            pts = np.stack([c[:, j % 2] + kp[:, j] for j in range(10)], -1).reshape(-1, 5, 2)
+            sc_l.append(sc.ravel()[keep]); bx_l.append(box[keep]); kp_l.append(pts[keep])
+        scores = np.concatenate(sc_l)
+        if scores.size == 0:
+            return np.empty((0, 5), np.float32), np.empty((0, 5, 2), np.float32)
+        order = np.argsort(-scores, kind="stable")
+        fx, fy = nw / w, nh / h
+        boxes = np.concatenate(bx_l) / np.array([fx, fy, fx, fy])
+        dets = np.hstack([boxes, scores[:, None]])[order].astype(np.float32)
+        kps = (np.concatenate(kp_l) / np.array([fx, fy]))[order]
+        keep = _nms(dets, self.nms)
+        return dets[keep], kps[keep]
 
 
 class RetinaFaceDetector:
