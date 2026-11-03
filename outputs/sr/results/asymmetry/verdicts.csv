@@ -1,0 +1,4 @@
+hypothesis,criterion,detail,verdict,bonferroni_detail
+H1 protocol artefact,"CI of (TinyFace change - SurvFace change) contains zero in more than half of the cells, for both matched metrics","{""closed_set_rank1"": [26, 36, 32], ""verification_auc"": [20, 36, 27]}",supported,closed_set_rank1: 32/36 cells contain zero under Bonferroni; verification_auc: 27/36 cells contain zero under Bonferroni
+H4 homogenisation (mechanism),"Spearman across variants between penalty and (delta impostor - delta genuine) above zero, per dataset x recognizer x mode",12/12 groups,supported,not applicable (no CI)
+H7 quality inflation,deferred (needs re-embedding),not run,deferred,

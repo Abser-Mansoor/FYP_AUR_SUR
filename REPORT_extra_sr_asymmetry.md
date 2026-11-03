@@ -76,3 +76,169 @@ The pre-registration above is not edited. The choices below turn its tests into 
 10. **H5.** Every mated SurvFace probe is compared with every gallery image of the same identity; same-camera and cross-camera comparisons are separated by the camera in the file name. The change in cosine is bootstrapped over comparisons (the comparisons share queries, so the CI is somewhat narrow). The camera predictability is the leave-one-out kNN (k = 5, cosine, majority vote, ties to the smaller camera number) accuracy on the SurvFace gallery. The criterion is met in a cell if the kNN accuracy rises with a CI above zero, or if the cross-camera change minus the same-camera change has a CI entirely below zero. Only the "both" mode changes the gallery, so only "both" cells count.
 11. **H6.** The threshold is the one that the official open-set code picks for FPIR 0.3. Mated-score part = TPIR with the direct threshold applied to restored mated scores, minus direct TPIR; threshold-shift part = restored TPIR (with its own threshold) minus that mixed value. The two sum to the total change. The criterion is met if the absolute threshold-shift part is larger than the absolute mated-score part. This follows the stated logic (the threshold moves because the unmated scores change, and fixing the direct threshold isolates the mated-score change); the plan's wording lists the parts in the other order.
 12. **Devices.** The OSDFace embeddings were computed on a Colab T4 and merged into the cache; every other embedding, including the direct-feed baseline, is from the lab PC. The OSDFace changes therefore compare T4 restored embeddings with lab-PC direct embeddings. Phase 3's cross-device check is the only evidence that this is harmless.
+
+
+---
+
+# Results (added after the run; the sections above are unchanged)
+
+Numbers come from `outputs/sr/results/asymmetry/` (written by `scripts/extra_sr_asymmetry.py`, committed before the run). The script ran twice and all 8 output files have identical SHA-256 (`determinism_hashes.txt`). Check against Phase 3: the direct-feed and both-sides-restored TinyFace Rank-1 and SurvFace verification AUC computed here equal the Phase 3 result files to 6 decimals in all 18 variant × recognizer cells and for the 3 direct-feed baselines (0 mismatches). CPU only, seed 42, 1,000 bootstrap draws.
+
+## 1. Summary
+- **By the pre-registered rule, H1 is supported: the difference between SurvFace and TinyFace in the Phase 3 tables is largely a protocol artefact.** On a common scale, the dataset difference in the change caused by restoration has a CI that contains zero in 26 of 36 cells for closed-set Rank-1 (72%) and in 20 of 36 cells for verification AUC (56%). Under the Bonferroni adjustment these become 32 and 27 of 36. Per the decision rule, H2, H3, H5 and H6 were not run.
+- **The change in absolute Rank-1 is about the same on both datasets** (mean over the 36 cells: TinyFace -0.052, SurvFace -0.057). In relative terms SurvFace loses more (mean -29% against -16%), because its direct-feed Rank-1 is lower (for example 0.18 against 0.34 for AdaFace).
+- **The AUC support is marginal and has a direction.** 20 of 36 is just above the pre-registered "more than half". In the 16 cells where the gap is significant, TinyFace always does better than SurvFace (mean gap +0.022 AUC over all 36 cells). These cells come from the four generative arms (Real-ESRGAN, InvSR, OSDFace, TADSR; 9 with both sides restored, 7 probes-only), never from bicubic, and 14 of the 16 are MagFace or CurricularFace.
+- **H4 is supported as a mechanism on both datasets:** across the 6 variants, the arms with the larger penalty raise impostor similarity more relative to genuine similarity (Spearman 0.77 to 1.00 in all 12 dataset × recognizer × mode groups). Restoration makes faces more alike, on both datasets. With 6 variants per group this is descriptive.
+- **H7 is deferred** (needs new MagFace inference on the restored crops; decision for Abser).
+
+## 2. The pre-registered plan
+Unchanged: see the pre-registration and the operationalisation addendum at the top of this file.
+
+## 3. Common-scale table (E0)
+Closed-set Rank-1 (TinyFace: probes against gallery matches plus 4,000 distractors; SurvFace: 4,476 mated probe images against the 4,486-image gallery, no distractors), and verification AUC and d' on 1,000 genuine and 1,000 impostor pairs per dataset (SurvFace: the existing pairs; TinyFace: the seeded pair list `tinyface_pairs.csv`). The change is restored minus direct feed with its paired 95% bootstrap CI; the last column says whether the CI of the dataset gap contains zero. The CSV files also hold the relative changes and the Bonferroni-adjusted CIs (`asym_common_scale.csv`, `asym_dataset_gap.csv`).
+
+#### Common scale (E0): change (restored minus direct) with 95% CI [Bonferroni over 36 cells in brackets in the CSV]
+
+**Closed-set Rank-1**
+
+| Variant | Recognizer | Mode | TinyFace direct -> restored | TinyFace change | SurvFace direct -> restored | SurvFace change | Gap (TinyFace - SurvFace) | CI contains 0 |
+|---|---|---|---|---|---|---|---|---|
+| bicubic: pre512 | adaface | both | 0.336 -> 0.342 | +0.006 [-0.007, +0.020] | 0.183 -> 0.191 | +0.007 [-0.001, +0.015] | -0.001 [-0.017, +0.015] | yes |
+| bicubic: pre512 | adaface | probes | 0.336 -> 0.336 | +0.000 [-0.010, +0.012] | 0.183 -> 0.187 | +0.004 [-0.004, +0.011] | -0.004 [-0.016, +0.010] | yes |
+| esrgan: native | adaface | both | 0.336 -> 0.343 | +0.007 [-0.016, +0.029] | 0.183 -> 0.141 | -0.042 [-0.055, -0.030] | +0.049 [+0.022, +0.075] | no |
+| esrgan: native | adaface | probes | 0.336 -> 0.252 | -0.084 [-0.107, -0.063] | 0.183 -> 0.088 | -0.095 [-0.107, -0.083] | +0.011 [-0.015, +0.036] | yes |
+| invsr: pre64_st1 | adaface | both | 0.336 -> 0.242 | -0.094 [-0.120, -0.071] | 0.183 -> 0.084 | -0.099 [-0.111, -0.087] | +0.005 [-0.022, +0.032] | yes |
+| invsr: pre64_st1 | adaface | probes | 0.336 -> 0.190 | -0.146 [-0.171, -0.123] | 0.183 -> 0.047 | -0.137 [-0.149, -0.125] | -0.010 [-0.037, +0.018] | yes |
+| invsr: pre128_st1 | adaface | both | 0.336 -> 0.267 | -0.069 [-0.093, -0.046] | 0.183 -> 0.102 | -0.081 [-0.092, -0.069] | +0.012 [-0.015, +0.040] | yes |
+| invsr: pre128_st1 | adaface | probes | 0.336 -> 0.208 | -0.128 [-0.152, -0.105] | 0.183 -> 0.040 | -0.144 [-0.156, -0.132] | +0.016 [-0.010, +0.043] | yes |
+| tadsr: pre128_t250 | adaface | both | 0.336 -> 0.367 | +0.031 [+0.008, +0.054] | 0.183 -> 0.169 | -0.015 [-0.025, -0.003] | +0.046 [+0.021, +0.070] | no |
+| tadsr: pre128_t250 | adaface | probes | 0.336 -> 0.313 | -0.023 [-0.043, -0.001] | 0.183 -> 0.151 | -0.032 [-0.043, -0.022] | +0.010 [-0.014, +0.035] | yes |
+| osdface: pre128 | adaface | both | 0.336 -> 0.409 | +0.073 [+0.048, +0.098] | 0.183 -> 0.218 | +0.035 [+0.023, +0.048] | +0.038 [+0.011, +0.067] | no |
+| osdface: pre128 | adaface | probes | 0.336 -> 0.267 | -0.069 [-0.094, -0.048] | 0.183 -> 0.077 | -0.106 [-0.119, -0.093] | +0.037 [+0.009, +0.064] | no |
+| bicubic: pre512 | magface | both | 0.336 -> 0.317 | -0.019 [-0.031, -0.005] | 0.233 -> 0.232 | -0.002 [-0.010, +0.006] | -0.017 [-0.032, -0.001] | no |
+| bicubic: pre512 | magface | probes | 0.336 -> 0.323 | -0.013 [-0.024, -0.003] | 0.233 -> 0.232 | -0.002 [-0.009, +0.006] | -0.011 [-0.025, +0.003] | yes |
+| esrgan: native | magface | both | 0.336 -> 0.288 | -0.048 [-0.069, -0.026] | 0.233 -> 0.166 | -0.068 [-0.081, -0.055] | +0.020 [-0.006, +0.046] | yes |
+| esrgan: native | magface | probes | 0.336 -> 0.217 | -0.119 [-0.143, -0.094] | 0.233 -> 0.104 | -0.129 [-0.142, -0.118] | +0.011 [-0.017, +0.038] | yes |
+| invsr: pre64_st1 | magface | both | 0.336 -> 0.216 | -0.119 [-0.143, -0.097] | 0.233 -> 0.094 | -0.140 [-0.152, -0.127] | +0.020 [-0.004, +0.045] | yes |
+| invsr: pre64_st1 | magface | probes | 0.336 -> 0.153 | -0.183 [-0.207, -0.158] | 0.233 -> 0.064 | -0.169 [-0.182, -0.157] | -0.014 [-0.042, +0.014] | yes |
+| invsr: pre128_st1 | magface | both | 0.336 -> 0.239 | -0.097 [-0.119, -0.074] | 0.233 -> 0.144 | -0.090 [-0.103, -0.078] | -0.007 [-0.032, +0.019] | yes |
+| invsr: pre128_st1 | magface | probes | 0.336 -> 0.195 | -0.141 [-0.165, -0.114] | 0.233 -> 0.124 | -0.109 [-0.122, -0.098] | -0.032 [-0.059, -0.004] | no |
+| tadsr: pre128_t250 | magface | both | 0.336 -> 0.331 | -0.005 [-0.026, +0.017] | 0.233 -> 0.214 | -0.019 [-0.029, -0.009] | +0.014 [-0.010, +0.039] | yes |
+| tadsr: pre128_t250 | magface | probes | 0.336 -> 0.298 | -0.038 [-0.061, -0.015] | 0.233 -> 0.216 | -0.018 [-0.027, -0.008] | -0.020 [-0.045, +0.006] | yes |
+| osdface: pre128 | magface | both | 0.336 -> 0.362 | +0.026 [+0.003, +0.050] | 0.233 -> 0.223 | -0.010 [-0.022, +0.003] | +0.036 [+0.011, +0.063] | no |
+| osdface: pre128 | magface | probes | 0.336 -> 0.237 | -0.099 [-0.124, -0.074] | 0.233 -> 0.148 | -0.085 [-0.099, -0.071] | -0.014 [-0.044, +0.015] | yes |
+| bicubic: pre512 | curricularface | both | 0.298 -> 0.284 | -0.014 [-0.029, +0.001] | 0.166 -> 0.167 | +0.002 [-0.007, +0.010] | -0.016 [-0.031, +0.002] | yes |
+| bicubic: pre512 | curricularface | probes | 0.298 -> 0.292 | -0.006 [-0.019, +0.007] | 0.166 -> 0.169 | +0.003 [-0.004, +0.011] | -0.009 [-0.024, +0.006] | yes |
+| esrgan: native | curricularface | both | 0.298 -> 0.301 | +0.003 [-0.019, +0.025] | 0.166 -> 0.150 | -0.015 [-0.027, -0.004] | +0.019 [-0.007, +0.044] | yes |
+| esrgan: native | curricularface | probes | 0.298 -> 0.198 | -0.100 [-0.124, -0.075] | 0.166 -> 0.082 | -0.083 [-0.095, -0.072] | -0.016 [-0.044, +0.011] | yes |
+| invsr: pre64_st1 | curricularface | both | 0.298 -> 0.218 | -0.080 [-0.100, -0.057] | 0.166 -> 0.079 | -0.086 [-0.097, -0.076] | +0.007 [-0.017, +0.033] | yes |
+| invsr: pre64_st1 | curricularface | probes | 0.298 -> 0.150 | -0.148 [-0.172, -0.123] | 0.166 -> 0.050 | -0.115 [-0.127, -0.104] | -0.033 [-0.059, -0.005] | no |
+| invsr: pre128_st1 | curricularface | both | 0.298 -> 0.218 | -0.080 [-0.102, -0.056] | 0.166 -> 0.097 | -0.069 [-0.080, -0.057] | -0.011 [-0.035, +0.013] | yes |
+| invsr: pre128_st1 | curricularface | probes | 0.298 -> 0.180 | -0.118 [-0.140, -0.092] | 0.166 -> 0.072 | -0.094 [-0.105, -0.083] | -0.024 [-0.050, +0.004] | yes |
+| tadsr: pre128_t250 | curricularface | both | 0.298 -> 0.322 | +0.024 [+0.003, +0.049] | 0.166 -> 0.143 | -0.022 [-0.032, -0.012] | +0.047 [+0.024, +0.073] | no |
+| tadsr: pre128_t250 | curricularface | probes | 0.298 -> 0.255 | -0.042 [-0.068, -0.017] | 0.166 -> 0.151 | -0.015 [-0.025, -0.005] | -0.028 [-0.056, +0.001] | yes |
+| osdface: pre128 | curricularface | both | 0.298 -> 0.383 | +0.085 [+0.061, +0.110] | 0.166 -> 0.209 | +0.044 [+0.031, +0.057] | +0.041 [+0.015, +0.069] | no |
+| osdface: pre128 | curricularface | probes | 0.298 -> 0.241 | -0.057 [-0.081, -0.031] | 0.166 -> 0.111 | -0.055 [-0.066, -0.042] | -0.003 [-0.031, +0.027] | yes |
+
+**Verification AUC**
+
+| Variant | Recognizer | Mode | TinyFace direct -> restored | TinyFace change | SurvFace direct -> restored | SurvFace change | Gap (TinyFace - SurvFace) | CI contains 0 |
+|---|---|---|---|---|---|---|---|---|
+| bicubic: pre512 | adaface | both | 0.813 -> 0.817 | +0.004 [-0.000, +0.009] | 0.652 -> 0.657 | +0.004 [-0.005, +0.013] | -0.000 [-0.010, +0.010] | yes |
+| bicubic: pre512 | adaface | probes | 0.813 -> 0.813 | +0.000 [-0.003, +0.004] | 0.652 -> 0.651 | -0.001 [-0.008, +0.006] | +0.001 [-0.006, +0.009] | yes |
+| esrgan: native | adaface | both | 0.813 -> 0.811 | -0.002 [-0.017, +0.015] | 0.652 -> 0.672 | +0.020 [-0.001, +0.041] | -0.022 [-0.048, +0.004] | yes |
+| esrgan: native | adaface | probes | 0.813 -> 0.785 | -0.028 [-0.042, -0.014] | 0.652 -> 0.633 | -0.019 [-0.037, -0.002] | -0.009 [-0.031, +0.013] | yes |
+| invsr: pre64_st1 | adaface | both | 0.813 -> 0.768 | -0.045 [-0.063, -0.028] | 0.652 -> 0.587 | -0.066 [-0.092, -0.041] | +0.021 [-0.009, +0.051] | yes |
+| invsr: pre64_st1 | adaface | probes | 0.813 -> 0.737 | -0.076 [-0.092, -0.059] | 0.652 -> 0.589 | -0.063 [-0.084, -0.041] | -0.013 [-0.040, +0.014] | yes |
+| invsr: pre128_st1 | adaface | both | 0.813 -> 0.781 | -0.032 [-0.049, -0.014] | 0.652 -> 0.605 | -0.047 [-0.070, -0.023] | +0.015 [-0.013, +0.043] | yes |
+| invsr: pre128_st1 | adaface | probes | 0.813 -> 0.767 | -0.046 [-0.063, -0.030] | 0.652 -> 0.602 | -0.050 [-0.069, -0.031] | +0.004 [-0.020, +0.028] | yes |
+| tadsr: pre128_t250 | adaface | both | 0.813 -> 0.850 | +0.037 [+0.023, +0.051] | 0.652 -> 0.649 | -0.003 [-0.019, +0.012] | +0.040 [+0.020, +0.061] | no |
+| tadsr: pre128_t250 | adaface | probes | 0.813 -> 0.817 | +0.003 [-0.010, +0.017] | 0.652 -> 0.637 | -0.016 [-0.027, -0.004] | +0.019 [+0.001, +0.037] | no |
+| osdface: pre128 | adaface | both | 0.813 -> 0.848 | +0.034 [+0.018, +0.051] | 0.652 -> 0.704 | +0.051 [+0.026, +0.077] | -0.017 [-0.049, +0.014] | yes |
+| osdface: pre128 | adaface | probes | 0.813 -> 0.787 | -0.026 [-0.044, -0.011] | 0.652 -> 0.627 | -0.025 [-0.049, +0.001] | -0.001 [-0.032, +0.027] | yes |
+| bicubic: pre512 | magface | both | 0.771 -> 0.768 | -0.002 [-0.007, +0.002] | 0.673 -> 0.671 | -0.002 [-0.008, +0.004] | -0.001 [-0.008, +0.007] | yes |
+| bicubic: pre512 | magface | probes | 0.771 -> 0.769 | -0.002 [-0.005, +0.001] | 0.673 -> 0.672 | -0.001 [-0.006, +0.003] | -0.001 [-0.007, +0.004] | yes |
+| esrgan: native | magface | both | 0.771 -> 0.778 | +0.007 [-0.008, +0.022] | 0.673 -> 0.671 | -0.002 [-0.020, +0.017] | +0.008 [-0.014, +0.032] | yes |
+| esrgan: native | magface | probes | 0.771 -> 0.756 | -0.015 [-0.028, -0.002] | 0.673 -> 0.637 | -0.035 [-0.052, -0.019] | +0.021 [+0.001, +0.042] | no |
+| invsr: pre64_st1 | magface | both | 0.771 -> 0.747 | -0.024 [-0.041, -0.005] | 0.673 -> 0.594 | -0.079 [-0.101, -0.058] | +0.055 [+0.027, +0.084] | no |
+| invsr: pre64_st1 | magface | probes | 0.771 -> 0.727 | -0.044 [-0.061, -0.028] | 0.673 -> 0.580 | -0.092 [-0.112, -0.073] | +0.048 [+0.022, +0.074] | no |
+| invsr: pre128_st1 | magface | both | 0.771 -> 0.772 | +0.001 [-0.016, +0.018] | 0.673 -> 0.628 | -0.045 [-0.067, -0.025] | +0.046 [+0.020, +0.071] | no |
+| invsr: pre128_st1 | magface | probes | 0.771 -> 0.741 | -0.030 [-0.046, -0.014] | 0.673 -> 0.616 | -0.056 [-0.073, -0.039] | +0.026 [+0.003, +0.049] | no |
+| tadsr: pre128_t250 | magface | both | 0.771 -> 0.825 | +0.054 [+0.041, +0.068] | 0.673 -> 0.646 | -0.026 [-0.039, -0.013] | +0.080 [+0.062, +0.099] | no |
+| tadsr: pre128_t250 | magface | probes | 0.771 -> 0.776 | +0.005 [-0.009, +0.019] | 0.673 -> 0.652 | -0.021 [-0.030, -0.011] | +0.026 [+0.009, +0.042] | no |
+| osdface: pre128 | magface | both | 0.771 -> 0.809 | +0.038 [+0.019, +0.057] | 0.673 -> 0.676 | +0.003 [-0.021, +0.028] | +0.035 [+0.004, +0.068] | no |
+| osdface: pre128 | magface | probes | 0.771 -> 0.765 | -0.006 [-0.024, +0.012] | 0.673 -> 0.623 | -0.050 [-0.072, -0.027] | +0.044 [+0.015, +0.076] | no |
+| bicubic: pre512 | curricularface | both | 0.785 -> 0.782 | -0.003 [-0.008, +0.003] | 0.647 -> 0.644 | -0.002 [-0.011, +0.006] | -0.000 [-0.011, +0.010] | yes |
+| bicubic: pre512 | curricularface | probes | 0.785 -> 0.782 | -0.003 [-0.007, +0.001] | 0.647 -> 0.642 | -0.004 [-0.011, +0.002] | +0.002 [-0.007, +0.009] | yes |
+| esrgan: native | curricularface | both | 0.785 -> 0.799 | +0.015 [-0.002, +0.031] | 0.647 -> 0.632 | -0.015 [-0.038, +0.007] | +0.030 [+0.003, +0.058] | no |
+| esrgan: native | curricularface | probes | 0.785 -> 0.764 | -0.020 [-0.037, -0.005] | 0.647 -> 0.598 | -0.049 [-0.069, -0.030] | +0.029 [+0.004, +0.053] | no |
+| invsr: pre64_st1 | curricularface | both | 0.785 -> 0.767 | -0.018 [-0.039, +0.001] | 0.647 -> 0.567 | -0.080 [-0.106, -0.054] | +0.062 [+0.031, +0.095] | no |
+| invsr: pre64_st1 | curricularface | probes | 0.785 -> 0.728 | -0.056 [-0.076, -0.038] | 0.647 -> 0.561 | -0.086 [-0.110, -0.064] | +0.029 [-0.001, +0.061] | yes |
+| invsr: pre128_st1 | curricularface | both | 0.785 -> 0.791 | +0.006 [-0.012, +0.024] | 0.647 -> 0.597 | -0.049 [-0.073, -0.027] | +0.055 [+0.026, +0.083] | no |
+| invsr: pre128_st1 | curricularface | probes | 0.785 -> 0.741 | -0.043 [-0.063, -0.024] | 0.647 -> 0.596 | -0.050 [-0.070, -0.031] | +0.007 [-0.021, +0.032] | yes |
+| tadsr: pre128_t250 | curricularface | both | 0.785 -> 0.831 | +0.046 [+0.030, +0.062] | 0.647 -> 0.615 | -0.031 [-0.047, -0.016] | +0.077 [+0.054, +0.100] | no |
+| tadsr: pre128_t250 | curricularface | probes | 0.785 -> 0.777 | -0.008 [-0.025, +0.008] | 0.647 -> 0.618 | -0.029 [-0.042, -0.015] | +0.021 [-0.001, +0.041] | yes |
+| osdface: pre128 | curricularface | both | 0.785 -> 0.842 | +0.057 [+0.038, +0.074] | 0.647 -> 0.672 | +0.025 [+0.000, +0.053] | +0.032 [-0.000, +0.064] | yes |
+| osdface: pre128 | curricularface | probes | 0.785 -> 0.762 | -0.022 [-0.044, -0.004] | 0.647 -> 0.600 | -0.046 [-0.074, -0.016] | +0.024 [-0.010, +0.058] | yes |
+
+**Verification d'**
+
+| Variant | Recognizer | Mode | TinyFace direct -> restored | TinyFace change | SurvFace direct -> restored | SurvFace change | Gap (TinyFace - SurvFace) | CI contains 0 |
+|---|---|---|---|---|---|---|---|---|
+| bicubic: pre512 | adaface | both | 1.229 -> 1.246 | +0.017 [-0.003, +0.038] | 0.564 -> 0.573 | +0.009 [-0.022, +0.044] | +0.007 [-0.033, +0.046] | yes |
+| bicubic: pre512 | adaface | probes | 1.229 -> 1.235 | +0.006 [-0.010, +0.022] | 0.564 -> 0.551 | -0.012 [-0.035, +0.012] | +0.018 [-0.010, +0.047] | yes |
+| esrgan: native | adaface | both | 1.229 -> 1.215 | -0.014 [-0.079, +0.052] | 0.564 -> 0.639 | +0.075 [-0.002, +0.158] | -0.089 [-0.197, +0.016] | yes |
+| esrgan: native | adaface | probes | 1.229 -> 1.114 | -0.115 [-0.181, -0.052] | 0.564 -> 0.468 | -0.096 [-0.167, -0.026] | -0.019 [-0.114, +0.076] | yes |
+| invsr: pre64_st1 | adaface | both | 1.229 -> 1.008 | -0.221 [-0.292, -0.153] | 0.564 -> 0.304 | -0.260 [-0.351, -0.169] | +0.039 [-0.077, +0.160] | yes |
+| invsr: pre64_st1 | adaface | probes | 1.229 -> 0.896 | -0.333 [-0.412, -0.258] | 0.564 -> 0.298 | -0.266 [-0.339, -0.193] | -0.068 [-0.171, +0.039] | yes |
+| invsr: pre128_st1 | adaface | both | 1.229 -> 1.056 | -0.173 [-0.246, -0.102] | 0.564 -> 0.372 | -0.192 [-0.274, -0.102] | +0.019 [-0.092, +0.126] | yes |
+| invsr: pre128_st1 | adaface | probes | 1.229 -> 1.025 | -0.204 [-0.276, -0.136] | 0.564 -> 0.349 | -0.215 [-0.286, -0.143] | +0.011 [-0.092, +0.104] | yes |
+| tadsr: pre128_t250 | adaface | both | 1.229 -> 1.329 | +0.100 [+0.040, +0.169] | 0.564 -> 0.548 | -0.016 [-0.072, +0.041] | +0.116 [+0.031, +0.201] | no |
+| tadsr: pre128_t250 | adaface | probes | 1.229 -> 1.266 | +0.037 [-0.023, +0.099] | 0.564 -> 0.492 | -0.071 [-0.113, -0.030] | +0.108 [+0.037, +0.179] | no |
+| osdface: pre128 | adaface | both | 1.229 -> 1.385 | +0.156 [+0.084, +0.228] | 0.564 -> 0.747 | +0.183 [+0.087, +0.275] | -0.027 [-0.144, +0.098] | yes |
+| osdface: pre128 | adaface | probes | 1.229 -> 1.141 | -0.088 [-0.162, -0.016] | 0.564 -> 0.481 | -0.083 [-0.182, +0.010] | -0.005 [-0.127, +0.121] | yes |
+| bicubic: pre512 | magface | both | 1.066 -> 1.052 | -0.014 [-0.031, +0.003] | 0.647 -> 0.643 | -0.004 [-0.026, +0.019] | -0.011 [-0.039, +0.017] | yes |
+| bicubic: pre512 | magface | probes | 1.066 -> 1.056 | -0.010 [-0.022, +0.001] | 0.647 -> 0.644 | -0.002 [-0.018, +0.014] | -0.008 [-0.029, +0.011] | yes |
+| esrgan: native | magface | both | 1.066 -> 1.081 | +0.015 [-0.051, +0.085] | 0.647 -> 0.635 | -0.012 [-0.079, +0.063] | +0.027 [-0.075, +0.126] | yes |
+| esrgan: native | magface | probes | 1.066 -> 0.994 | -0.072 [-0.124, -0.017] | 0.647 -> 0.499 | -0.147 [-0.207, -0.086] | +0.075 [-0.009, +0.155] | yes |
+| invsr: pre64_st1 | magface | both | 1.066 -> 0.930 | -0.136 [-0.209, -0.063] | 0.647 -> 0.347 | -0.299 [-0.383, -0.218] | +0.164 [+0.056, +0.271] | no |
+| invsr: pre64_st1 | magface | probes | 1.066 -> 0.869 | -0.197 [-0.268, -0.127] | 0.647 -> 0.308 | -0.339 [-0.406, -0.267] | +0.141 [+0.044, +0.237] | no |
+| invsr: pre128_st1 | magface | both | 1.066 -> 1.033 | -0.033 [-0.111, +0.039] | 0.647 -> 0.459 | -0.188 [-0.264, -0.111] | +0.155 [+0.045, +0.258] | no |
+| invsr: pre128_st1 | magface | probes | 1.066 -> 0.922 | -0.144 [-0.211, -0.075] | 0.647 -> 0.430 | -0.217 [-0.274, -0.155] | +0.073 [-0.023, +0.170] | yes |
+| tadsr: pre128_t250 | magface | both | 1.066 -> 1.260 | +0.194 [+0.125, +0.264] | 0.647 -> 0.547 | -0.100 [-0.143, -0.052] | +0.294 [+0.210, +0.379] | no |
+| tadsr: pre128_t250 | magface | probes | 1.066 -> 1.075 | +0.009 [-0.053, +0.070] | 0.647 -> 0.565 | -0.082 [-0.117, -0.044] | +0.091 [+0.021, +0.160] | no |
+| osdface: pre128 | magface | both | 1.066 -> 1.213 | +0.146 [+0.066, +0.233] | 0.647 -> 0.656 | +0.009 [-0.083, +0.104] | +0.137 [+0.019, +0.266] | no |
+| osdface: pre128 | magface | probes | 1.066 -> 1.046 | -0.021 [-0.100, +0.068] | 0.647 -> 0.443 | -0.204 [-0.293, -0.121] | +0.183 [+0.071, +0.315] | no |
+| bicubic: pre512 | curricularface | both | 1.122 -> 1.102 | -0.020 [-0.044, +0.006] | 0.545 -> 0.540 | -0.005 [-0.039, +0.027] | -0.014 [-0.053, +0.031] | yes |
+| bicubic: pre512 | curricularface | probes | 1.122 -> 1.109 | -0.013 [-0.032, +0.007] | 0.545 -> 0.533 | -0.012 [-0.036, +0.013] | -0.001 [-0.032, +0.031] | yes |
+| esrgan: native | curricularface | both | 1.122 -> 1.159 | +0.038 [-0.032, +0.111] | 0.545 -> 0.492 | -0.053 [-0.135, +0.027] | +0.090 [-0.014, +0.206] | yes |
+| esrgan: native | curricularface | probes | 1.122 -> 1.028 | -0.094 [-0.161, -0.020] | 0.545 -> 0.348 | -0.196 [-0.263, -0.131] | +0.102 [+0.009, +0.205] | no |
+| invsr: pre64_st1 | curricularface | both | 1.122 -> 0.999 | -0.122 [-0.199, -0.045] | 0.545 -> 0.251 | -0.294 [-0.388, -0.198] | +0.172 [+0.051, +0.285] | no |
+| invsr: pre64_st1 | curricularface | probes | 1.122 -> 0.862 | -0.260 [-0.347, -0.186] | 0.545 -> 0.209 | -0.336 [-0.417, -0.255] | +0.076 [-0.037, +0.183] | yes |
+| invsr: pre128_st1 | curricularface | both | 1.122 -> 1.066 | -0.056 [-0.133, +0.018] | 0.545 -> 0.355 | -0.190 [-0.275, -0.105] | +0.134 [+0.022, +0.244] | no |
+| invsr: pre128_st1 | curricularface | probes | 1.122 -> 0.900 | -0.222 [-0.309, -0.145] | 0.545 -> 0.346 | -0.199 [-0.261, -0.128] | -0.023 [-0.135, +0.067] | yes |
+| tadsr: pre128_t250 | curricularface | both | 1.122 -> 1.244 | +0.123 [+0.056, +0.190] | 0.545 -> 0.422 | -0.122 [-0.178, -0.068] | +0.245 [+0.159, +0.334] | no |
+| tadsr: pre128_t250 | curricularface | probes | 1.122 -> 1.072 | -0.050 [-0.124, +0.021] | 0.545 -> 0.432 | -0.113 [-0.162, -0.065] | +0.063 [-0.022, +0.148] | yes |
+| osdface: pre128 | curricularface | both | 1.122 -> 1.326 | +0.205 [+0.119, +0.287] | 0.545 -> 0.660 | +0.115 [+0.017, +0.206] | +0.089 [-0.045, +0.217] | yes |
+| osdface: pre128 | curricularface | probes | 1.122 -> 1.023 | -0.099 [-0.190, -0.008] | 0.545 -> 0.388 | -0.157 [-0.259, -0.066] | +0.058 [-0.077, +0.203] | yes |
+
+## 4. Hypotheses
+- **H1 (protocol artefact): supported** by the pre-registered rule (Rank-1 gap CI contains zero in 26 of 36 cells, AUC in 20 of 36; d' in 23 of 36 is shown for information and does not decide). The 10 Rank-1 cells where it does not contain zero: 7 favour TinyFace (Real-ESRGAN, TADSR and OSDFace with both sides restored, and OSDFace probes-only for AdaFace) and 3 favour SurvFace (bicubic MagFace both sides; InvSR probes-only for MagFace and CurricularFace). All 16 AUC cells where it does not contain zero favour TinyFace.
+- **H2, H3, H5, H6: not run.** The decision rule for E0 says to stop after H4 when H1 is supported. The code for them exists in the script and was tested on a small forced run that is not a result. During that test one data property was found: every mated SurvFace probe is compared with gallery images from a different camera (0 same-camera comparisons out of 340,677 per recognizer), so the pre-registered same-camera against cross-camera test of H5 could not be run on mated pairs even if H5 were run. The script therefore also computes a supplementary gallery-against-gallery comparison, which has not been run for the reported results.
+- **H4 (genuine / impostor decomposition): supported** (`h4_genuine_impostor.csv`, `h4_spearman.csv`). In every dataset, recognizer and mode group, the variants with the larger loss in verification AUC are the ones where the mean impostor cosine rises more than the mean genuine cosine.
+- **H7 (quality inflation): deferred**, not run.
+
+## 5. What this means for the SR closure claim
+The claim that restoration does not help recognition on these crops holds on both datasets, and the SurvFace-versus-TinyFace difference in the earlier tables is mostly due to measuring them with different protocols: once both are scored with the same closed-set and verification metrics, the absolute change is similar in size and the dataset difference is inside the bootstrap error in most cells. The caveat is that on verification AUC the generative arms with both sides restored help TinyFace slightly more than SurvFace, and SurvFace's lower direct-feed baseline makes the same absolute loss a larger relative loss. The mechanism visible on both datasets is that restoration pushes impostor similarity up relative to genuine similarity. None of this changes the closure of restoration; it only narrows the claim: the penalty is not specific to SurvFace.
+
+## 6. Limitations
+- **Subset sizes and identity counts:** 800 TinyFace identities (1,155 probes, 5,373 gallery and distractor images) against 200 SurvFace identities (4,476 mated probes, 4,486 gallery images). The SurvFace closed-set Rank-1 is not an official SurvFace protocol, and TinyFace Rank-1 includes 4,000 distractors while SurvFace has none, so the Rank-1 levels are not comparable across datasets; only the changes are.
+- **The H1 rule is marginal for AUC (20 of 36 cells), and "most" was operationalised as "more than half" after the pre-registration was committed** (addendum, before any number). A stricter reading would not support H1 for AUC.
+- **H2, H3, H5 and H6 were not run, by the decision rule.** The explanation for the residual SurvFace gap (crop size, distractors, camera, threshold) is therefore untested. Running them would be an extra, non-pre-registered step.
+- **TinyFace verification pairs** are one seeded sample of 1,000 genuine and 1,000 impostor pairs; another seed would give somewhat different numbers.
+- **Observational, not causal:** the H4 correlation rests on 6 variants per group.
+- **Devices:** the OSDFace embeddings were computed on a Colab T4, all other embeddings (including the direct-feed baseline) on the lab PC. OSDFace changes therefore compare T4 restored embeddings with lab-PC direct embeddings; the Phase 3 cross-device check is the only evidence that this is harmless.
+- **ArcFace** was left out (leaky for OSDFace; the plan allows it only as an appendix).
+- **Multiple tests:** 36 cells per metric. The plain CIs decide; the Bonferroni-adjusted CIs (family of 36) would turn the AUC count into 27 of 36 and the Rank-1 count into 32 of 36, which strengthens H1.
+
+**STOP: awaiting supervisor review.**
