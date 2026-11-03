@@ -26,6 +26,16 @@
 !/outputs/video/detstudy/_diag/*.py
 !/outputs/video/detstudy/_diag/*.json
 !/outputs/video/detstudy/_diag/*.txt
+!/outputs/video/detstudy/_diag/refeval/
+/outputs/video/detstudy/_diag/refeval/*
+!/outputs/video/detstudy/_diag/refeval/evaluation.py
+!/outputs/video/detstudy/_diag/refeval/README.md
+!/outputs/video/detstudy/_diag/refeval/dump_preds.py
+!/outputs/video/detstudy/_diag/refeval/LICENSE_WiderFace-Evaluation.txt
+!/outputs/video/detstudy/_diag/refeval/SOURCE.txt
+!/outputs/video/detstudy/_diag/refeval/shim/
+!/outputs/video/detstudy/_diag/refeval/preds_t4_full640/
+!/outputs/video/detstudy/_diag/refeval/preds_official_full640/
 !/outputs/video/detstudy_v2/
 /outputs/video/detstudy_v2/*
 !/outputs/video/detstudy_v2/results/
@@ -62,3 +72,7 @@ desktop.ini
 *.onnx
 *.pkl
 *.bin
+
+# diagnostic logs of the Phase 5 AP-gate investigation (after the global *.log rule so they are kept)
+!/outputs/video/detstudy/_diag/*.log
+!/outputs/video/detstudy/_diag/refeval/*.log

@@ -1,0 +1,5 @@
+evaluation.py, README.md: https://github.com/wondervictor/WiderFace-Evaluation (MIT, see LICENSE_WiderFace-Evaluation.txt), unmodified
+latest upstream commit on the fetch date (2026-11-03): 53474e0d35ecdd019052d4fff0813ea4037bd0cd (the file was fetched from master)
+sha256 evaluation.py: 9d2a61dd3aba8edde7d12a540512602c29c33e356acdd30a8ab35b533e41f45e
+shim/ (bbox.py, IPython.py) are ours: stand-ins for the compiled bbox_overlaps and an IPython import the script needs. bbox.pyx is not kept (the file was not available upstream).
+dump_preds.py writes the detections in the official txt format; preds_t4_full640 = first-run T4 detections, preds_official_full640 = CPU run with the official preprocessing (score floor 0.02).

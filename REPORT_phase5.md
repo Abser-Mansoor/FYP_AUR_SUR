@@ -15,7 +15,7 @@
 Full per-dataset table: `DATASETS.md`. Summary:
 
 - **Held:** ChokePoint (downloaded and extracted 2026-10-22, 25 files, 11.71 GB, per-file md5 checked; CC BY-NC 4.0 on Zenodo, non-commercial research terms on the NICTA page), WIDER FACE val (3,226 images, 2026-10-22), TinyFace and QMUL-SurvFace (Phase 0).
-- **Requests:** on 2026-11-03 Abser reported that the dataset access requests have been sent, by him and by the supervisor, and that responses are awaited. The drafts are in `docs/requests/` (YouTube Faces registration, FANVID authors, COX Face DB, SCface, IJB-S question to the supervisor, campus clip consent). **Which individual requests were sent was not stated, so the per-dataset statuses in `DATASETS.md` are unchanged.** BRIAR is blocked (no academic route found).
+- **Requests** (reported by Abser, 2026-11-03; drafts in `docs/requests/`): sent to FANVID and SCface, and to one further dataset whose name he did not remember (to be identified). Replies are awaited. COX Face DB and IJB-S are unavailable. The campus clip consent is discouraged by the supervisor and is not pursued. The YouTube Faces registration status is unknown. BRIAR is blocked (no academic route found). **ChokePoint is therefore the only video dataset with identity labels that we hold.**
 - **Licence handling:** the GitHub repository is public and ChokePoint is non-commercial, so no ChokePoint frame, overlay or eye-label file is committed (`.gitignore`).
 - **ChokePoint protocol:** found on the dataset page and recorded in `DATASETS.md` (section "ChokePoint protocol"). It is a pair-verification protocol with groups G1 and G2 of eight sequences each. It does not define a tracking or identification split. The Zenodo `README.txt` has no protocol section.
 
@@ -40,7 +40,7 @@ Source: `outputs/video/gt/chokepoint_gt_summary.json`, `outputs/video/gt/eye_box
 - The P2E_S5 and P2L_S5 clips (the crowded ones) have no ground-truth file, so they are not used for recall.
 - Median inter-eye distance over all entries is 27.0 px (25th to 75th percentile 20.0 to 36.9 px).
 - **Eye-to-box rule** (the ground-truth boxes for recall are produced by it): box centre at the eye midpoint plus (-0.026, +0.259) times the inter-eye distance d, box width 2.31 d and height 3.00 d. It was fitted on SCRFD detections with score 0.9 or higher, matched to eye labels, and **only 12 pairs matched** (`n_pairs` in the json). The interquartile range of the offsets is 0.22 d horizontally and 0.07 d vertically.
-- **Overlay check.** The plan asks Umar to open five overlays and say whether the boxes sit on the faces. **That answer has not been given yet.** Claude opened five overlays from `outputs/video/gt/overlays/` (files 00, 05, 10, 15 and 19) on 2026-11-03. In all five the red eye points sit on the eyes. In four the green box covers the face. In file 19 (`P2E_S4_C1.1_00003114`) the person's head is turned and the box covers only the right half of the face, with the left cheek outside it. One image in five is a small sample, but it shows that a fixed offset from the eye midpoint can misplace the box on turned heads. Umar's own check is still open (section 10).
+- **Overlay check.** The plan asks for five overlays to be opened and judged by a team member (Abser will do this). **That answer has not been given yet.** Claude opened five overlays from `outputs/video/gt/overlays/` (files 00, 05, 10, 15 and 19) on 2026-11-03. In all five the red eye points sit on the eyes. In four the green box covers the face. In file 19 (`P2E_S4_C1.1_00003114`) the person's head is turned and the box covers only the right half of the face, with the left cheek outside it. One image in five is a small sample, but it shows that a fixed offset from the eye midpoint can misplace the box on turned heads. The check by the team (Abser) is still open (section 10).
 
 ## 5. Detector-by-size tables
 The tables are pasted from `outputs/video/detstudy_v2/results/detector_tables.md` (second run, one Colab T4). Face-height bins are in pixels. `nan` means the sample has no faces in that bin.
@@ -217,10 +217,10 @@ Median milliseconds per 1280x720 frame, batch 1, after 10 warm-up frames, 100 fr
 ## 10. Decisions for Phase 6
 - **Detector:** SCRFD `full1280` with `preprocess="official"` and NMS 0.45 (`configs/video.yaml`), if the supervisor agrees. `scrfd__tiled` is the alternative within the tie margin at 96.0 ms.
 - **ChokePoint protocol:** recorded in `DATASETS.md`. It is a verification protocol (G1 and G2). Whether to use it or to define a tracking-specific evaluation is open.
-- **YouTube Faces:** no registration confirmed. Fallback to VoxCeleb2 cropped face tracks if there is no access by 8 Nov. Abser reports that requests were sent on 2026-11-03; which ones needs to be confirmed.
+- **Video datasets:** only ChokePoint is held. FANVID and SCface requests are sent and unanswered; COX Face DB and IJB-S are unavailable; the campus clips are not pursued. YouTube Faces: no registration confirmed; fallback to VoxCeleb2 cropped face tracks if there is no access by 8 Nov. The name of the third request that was sent needs to be confirmed.
 - **CAFace** needs its own AdaFace WebFace4M single-frame baseline.
 - **FaceMoE** needs 120 px preprocessing.
 - **SFE-DETR** is dropped (no code).
-- **Umar's overlay check** (section 4) is still to be recorded.
+- **Overlay check** (section 4): Abser will do the visual check of the overlays; his answer is still to be recorded.
 
 **STOP: awaiting supervisor approval (together with Phase 4).**

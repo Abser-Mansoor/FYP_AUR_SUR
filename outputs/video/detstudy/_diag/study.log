@@ -1,0 +1,20 @@
+[33mWARNING: The installed PyTorch 2.14.0+cu126 uses CUDA 12.x, but onnxruntime-gpu is built with CUDA 13.x. Please install PyTorch for CUDA 13.x to be compatible.[0m
+study 0 1s
+study 200 206s
+study 400 423s
+study 600 712s
+study 800 1138s
+study 1000 1571s
+study 1200 2001s
+study 1400 2439s
+study 1600 2873s
+study 1800 3287s
+study 2000 3410s
+study 2200 3801s
+study 2400 4298s
+study 2600 4787s
+study 2800 5275s
+study 3000 5763s
+study 3200 6255s
+study floor 0.001 {'easy': 0.9485, 'medium': 0.9346, 'hard': 0.8128}
+study floor 0.02 {'easy': 0.9485, 'medium': 0.9346, 'hard': 0.8128}

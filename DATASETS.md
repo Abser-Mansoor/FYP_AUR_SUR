@@ -8,14 +8,14 @@ Status values: **held** (downloaded and verified), **requested** (request drafte
 | WIDER FACE val | held (2026-10-22) | official Google Drive (`WIDER_val.zip`), shuoyang1213.me/WIDERFACE (`wider_face_split.zip`, `eval_tools.zip`) | WIDER FACE terms (non-commercial research) | WIDER_val.zip 362,752,168 B, sha256 f9efbd09f28c5d2d...; wider_face_split.zip sha256 c7561e4f5e7a118c...; eval_tools.zip sha256 1cf49c8243fa8a16... | 3,226 val images; official counts easy/medium/hard = 7,211 / 13,319 / 31,958 faces (reproduced by `src/video/wider_eval.py`). |
 | TinyFace, QMUL-SurvFace | held (Phase 0) | QMUL | see dataset pages | `Dataset/` | Still crops, used for the crop detection rate. |
 | YouTube Faces | not requested yet (Abser, by hand) | cs.tau.ac.il/~wolf/ytfaces (portal registration) | not checked | - | Fallback if the portal is down: VoxCeleb2 cropped face tracks. |
-| FANVID | requested (draft `docs/requests/fanvid_authors.md`) | arXiv 2506.07304 | CC BY-NC, "upon publication" (per the paper) | - | Not public at the time of the notes. |
-| COX Face DB | requested (draft `docs/requests/coxface_request.md`) | vipl.ict.ac.cn | release agreement | - | Video-to-still protocol. |
-| SCface | requested (draft `docs/requests/scface_request.md`) | scface.org | signed agreement, no redistribution | - | Stills at 3 distances, no tracking. |
-| IJB-S | question for the supervisor (draft `docs/requests/ijbs_supervisor_question.md`) | NIST / IARPA | licence | - | NIST stopped distributing IJB-A/B/C in March 2023; IJB-S status unconfirmed. |
+| FANVID | request sent (reported by Abser 2026-11-03; draft `docs/requests/fanvid_authors.md`), awaiting reply | arXiv 2506.07304 | CC BY-NC, "upon publication" (per the paper) | - | Not public at the time of the notes. |
+| COX Face DB | unavailable (reported by Abser 2026-11-03; reason not recorded; draft `docs/requests/coxface_request.md`) | vipl.ict.ac.cn | release agreement | - | Video-to-still protocol. |
+| SCface | request sent (reported by Abser 2026-11-03; draft `docs/requests/scface_request.md`), awaiting reply | scface.org | signed agreement, no redistribution | - | Stills at 3 distances, no tracking. |
+| IJB-S | unavailable (reported by Abser 2026-11-03; reason not recorded; draft `docs/requests/ijbs_supervisor_question.md`) | NIST / IARPA | licence | - | NIST stopped distributing IJB-A/B/C in March 2023; IJB-S status unconfirmed. |
 | BRIAR | blocked | IARPA / ORNL | US government programme | - | No academic request route found in the Sprint 2 notes. |
-| Campus demo clips | consent form drafted (`docs/requests/campus_clip_consent.md`) | own recordings | consent form | - | Demo only, never used for reported metrics. Ethics approval question open. |
+| Campus demo clips | not pursued: the supervisor discourages it (reported by Abser 2026-11-03); consent form drafted (`docs/requests/campus_clip_consent.md`) | own recordings | consent form | - | Demo only, never used for reported metrics. Ethics approval question open. |
 
-Access requests: on 2026-11-03 Abser reported that the dataset access requests have been sent, by him and by the supervisor, and that responses are awaited. Which individual requests were sent was not stated; the per-dataset status values in the table above are unchanged until that is confirmed.
+Access requests (reported by Abser, 2026-11-03): requests were sent to FANVID and SCface, and to one further dataset whose name he did not remember (to be identified; the status of the other rows is unchanged). Replies are awaited. COX Face DB and IJB-S are unavailable. The campus clip consent is discouraged by the supervisor and is not pursued.
 
 ## ChokePoint ground-truth parse (`scripts/video_chokepoint_gt.py`, run 2026-10-22)
 Reported as found; the page figures were not adjusted to match.
