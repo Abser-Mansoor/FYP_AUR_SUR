@@ -34,8 +34,6 @@
 !/outputs/video/detstudy/_diag/refeval/LICENSE_WiderFace-Evaluation.txt
 !/outputs/video/detstudy/_diag/refeval/SOURCE.txt
 !/outputs/video/detstudy/_diag/refeval/shim/
-!/outputs/video/detstudy/_diag/refeval/preds_t4_full640/
-!/outputs/video/detstudy/_diag/refeval/preds_official_full640/
 !/outputs/video/detstudy_v2/
 /outputs/video/detstudy_v2/*
 !/outputs/video/detstudy_v2/results/
