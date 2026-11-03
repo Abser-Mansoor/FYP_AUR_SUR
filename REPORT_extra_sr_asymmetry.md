@@ -242,3 +242,21 @@ The claim that restoration does not help recognition on these crops holds on bot
 - **Multiple tests:** 36 cells per metric. The plain CIs decide; the Bonferroni-adjusted CIs (family of 36) would turn the AUC count into 27 of 36 and the Rank-1 count into 32 of 36, which strengthens H1.
 
 **STOP: awaiting supervisor review.**
+
+
+---
+
+## Second addendum: exploratory extension (committed before the extension was run)
+
+After the results above, Abser asked for two further things: to run H2, H3, H5 and H6 although the pre-registered stop rule (H1 supported) says to stop, and to run H7 for the four variants that have full-size restored PNGs on the lab PC. This is **exploratory**: it was not part of the pre-registered plan, the stop rule is deliberately overridden, and the verdicts below it describe what the data show; they do not reopen the verdict on H1. The first-pass results and verdicts above are not changed. No number of this extension existed when this addendum was written.
+
+1. **H2, H3, H5 and H6** are run exactly as defined in the first addendum, with the same code (`scripts/extra_sr_asymmetry.py --exploratory-stage2`), in a separate output folder `outputs/sr/results/asymmetry_exploratory/` and marked `exploratory` in `verdicts.csv`. The same script re-computes E0 and H4 there; those files must equal the first-pass files (hash comparison). Known limit, found while testing the script: H5's same-camera against cross-camera test on mated comparisons has no same-camera comparisons, so only the kNN part and the supplementary gallery-against-gallery comparison can be evaluated. The script is run twice and the outputs must be byte-identical.
+2. **H7 is new inference** and therefore breaks the "no new inference" constraint of the first plan; Abser authorised it. It is run by `scripts/extra_sr_asymmetry_h7.py` on the lab-PC GPU with the MagFace weights of Phase 1, on the full-size restored PNGs of bicubic `pre512`, Real-ESRGAN `native`, InvSR `pre64_st1` and TADSR `pre128_t250`. OSDFace (thumbnails only) and InvSR `pre128_st1` (no stored PNGs) are not covered. Definitions, fixed now:
+   - Only the mated probes are embedded (1,155 TinyFace probes, 4,476 SurvFace mated probes); the norm is a property of the probe image.
+   - The quality measure is the raw, un-normalised MagFace norm of the unflipped embedding, measured as in Phase 2 (`magface_norm_flip: false`). Direct crops use bilinear resizing to 112 px; restored 512-px outputs use INTER_AREA, as in Phase 3.
+   - Preprocessing checks that must pass before any H7 number is used: (a) the flip-summed, normalised embedding of every embedded crop equals the cached Phase 3 MagFace embedding (minimum cosine reported; expected above 0.9999); (b) the direct-feed norm of the TinyFace probes equals the Phase 2 `magface_norm` of the same images (maximum relative difference reported).
+   - For each variant and dataset: the change in norm (restored minus direct, per probe) with a paired 95% bootstrap CI (1,000 draws, seed 42), the relative change, and the change in genuine similarity (the H2 per-probe quantity, MagFace cached embeddings, both sides restored), also with its CI.
+   - The **larger-penalty dataset** of a variant is the one with the more negative change in MagFace verification AUC (both sides restored) in `asym_common_scale.csv`.
+   - **Criterion per variant:** on the larger-penalty dataset the CI of the mean norm change is entirely above zero, **and** the CI of the mean genuine-similarity change is not entirely above zero (no matching gain). The verdict rule is the one of the first addendum (supported if more than half of the 4 variants meet it, not supported if fewer than a third, else inconclusive).
+   - The Spearman correlation between the per-probe norm change and the per-probe genuine-similarity change is reported for each variant and dataset as a descriptive number only.
+   - The MagFace norm is a property of the MagFace model, so H7 uses MagFace only.

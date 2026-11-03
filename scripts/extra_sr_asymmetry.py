@@ -511,7 +511,8 @@ def main():
     ap.add_argument("--out", default=str(ROOT / "outputs/sr/results/asymmetry"))
     ap.add_argument("--recs", nargs="+", default=RECS)
     ap.add_argument("--n-variants", type=int, default=len(VARIANTS))
-    ap.add_argument("--force-stage2", action="store_true", help="TEST ONLY: run stage 2 even if H1 is supported (never used for the reported run)")
+    ap.add_argument("--exploratory-stage2", action="store_true", help="run stage 2 (H2, H3, H5, H6) even though H1 is supported; an exploratory extension requested by Abser, "
+                    "not part of the pre-registered stop rule. Use with --out outputs/sr/results/asymmetry_exploratory")
     a = ap.parse_args()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -546,7 +547,7 @@ def main():
     verdicts.append(dict(hypothesis="H4 homogenisation (mechanism)", criterion="Spearman across variants between penalty and (delta impostor - delta genuine) above zero, per dataset x recognizer x mode",
                          detail=f"{int(sp.criterion_met.sum())}/{len(sp)} groups", verdict=verdict(int(sp.criterion_met.sum()), len(sp)), bonferroni_detail="not applicable (no CI)"))
     s2 = None
-    if not h1_supported or a.force_stage2:
+    if not h1_supported or a.exploratory_stage2:
         s2 = run_stage(2, a.recs, variants, a.workers, out)
         names = dict(h2b="h2_binned_delta_genuine.csv", h2m="h2_matched_strata.csv", h3="h3_distractors.csv", h3i="h3_impostor_split.csv", h5c="h5_camera_pairs.csv", h5g="h5_supplementary_gallery_pairs.csv",
                      h5k="h5_knn_camera.csv", h6="h6_threshold_split.csv")
@@ -576,7 +577,9 @@ def main():
                              detail=f"{int(h6.criterion_met.sum())}/{len(h6)} cells (both {int(h6[h6['mode'] == 'both'].criterion_met.sum())}/{int((h6['mode'] == 'both').sum())}, probes {int(h6[h6['mode'] == 'probes'].criterion_met.sum())}/{int((h6['mode'] == 'probes').sum())})",
                              verdict=verdict(int(h6.criterion_met.sum()), len(h6)), bonferroni_detail="see h6_threshold_split.csv"))
     verdicts.append(dict(hypothesis="H7 quality inflation", criterion="deferred (needs re-embedding)", detail="not run", verdict="deferred", bonferroni_detail=""))
-    pd.DataFrame(verdicts).to_csv(out / "verdicts.csv", index=False)
+    vdf = pd.DataFrame(verdicts)
+    vdf["status"] = ["exploratory (run although H1 was supported)" if (h1_supported and v["hypothesis"][:2] in ("H2", "H3", "H5", "H6")) else "pre-registered" for v in verdicts]
+    vdf.to_csv(out / "verdicts.csv", index=False)
     # ---- tables for the report
     md = ["### Common scale (E0): change (restored minus direct) with 95% CI [Bonferroni over 36 cells in brackets in the CSV]", ""]
     e0 = s1["e0"]
