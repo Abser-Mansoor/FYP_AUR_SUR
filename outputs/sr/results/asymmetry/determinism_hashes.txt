@@ -1,0 +1,9 @@
+SHA-256 of the 8 output files of scripts/extra_sr_asymmetry.py (run 1, outputs/sr/results/asymmetry). A second full run into a separate folder gave identical hashes for all 8 files.
+16f8f7752f9292f04365f9278ba34134fbc027a4c012b3b8f49226cc19dbfa55 *asym_common_scale.csv
+ba52853bad8cfaba9709d48a4f4d2c4ffdedbe40032b1754072dc757d90cd982 *asym_dataset_gap.csv
+7f06454073014fc1c2b8628069bcf964a48457d5720e0880cf5f913d22c3ef67 *asym_tables.md
+523149fe929b794ebf2cc5912b71d60d0ea6ff1bce25b825728d4d0355602f36 *h4_genuine_impostor.csv
+58549810719e0e48d596439ce737180df2667c6a052692ba5ce5c8cd31d249af *h4_spearman.csv
+5ff00fb0576e5650087091d4e56a7e46c555795e550c33f36e4c4aad1b9c1194 *phase3_crosscheck_inputs.csv
+0051fe07b33b6d390919d3337c9b1502028f03114e0821492898f7b40352adc6 *tinyface_pairs.csv
+2ec170b6e4ca0d2ff5748c21039d2974bd8be99873d9778c9ea02299abe02b5e *verdicts.csv

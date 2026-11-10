@@ -1,0 +1,13 @@
+{
+ "min_cosine_to_cached_embedding": {
+  "direct": 0.9999998211860657,
+  "bicubic/pre512": 0.9999997615814209,
+  "esrgan/native": 0.9999998211860657,
+  "invsr/pre64_st1": 0.9999998211860657,
+  "tadsr/pre128_t250": 0.9999998211860657
+ },
+ "tinyface_probe_direct_norm_vs_phase2": {
+  "n_compared": 1155,
+  "max_abs_rel_diff": 5.2999674193531384e-05
+ }
+}

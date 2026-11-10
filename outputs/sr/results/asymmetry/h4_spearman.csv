@@ -1,0 +1,13 @@
+dataset,recognizer,mode,n_variants,spearman_penalty_vs_impostor_minus_genuine,criterion_met
+survface,adaface,both,6,0.94285714,True
+survface,adaface,probes,6,1,True
+survface,curricularface,both,6,0.94285714,True
+survface,curricularface,probes,6,0.77142857,True
+survface,magface,both,6,0.82857143,True
+survface,magface,probes,6,0.94285714,True
+tinyface,adaface,both,6,0.94285714,True
+tinyface,adaface,probes,6,0.88571429,True
+tinyface,curricularface,both,6,0.82857143,True
+tinyface,curricularface,probes,6,1,True
+tinyface,magface,both,6,0.77142857,True
+tinyface,magface,probes,6,0.88571429,True
