@@ -46,6 +46,12 @@
 !/outputs/video/verify_tiling.json
 !/outputs/video/tracker_smoke.json
 !/outputs/video/model_downloads.json
+!/outputs/video/trackeval_check.json
+!/outputs/video/embed_check.json
+!/outputs/video/phase6_checks.json
+!/outputs/video/tracker_eval/
+!/outputs/video/baseline/
+!/outputs/video/appendix/
 !/outputs/sr/
 /outputs/sr/*
 !/outputs/sr/results/

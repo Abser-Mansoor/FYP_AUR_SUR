@@ -44,3 +44,21 @@ d9f6e53641524e2a77d44af4c880dca4f82006967a5b46063375639a47535336 *utils/nms/py_c
 (models/retinaface.py upstream sha256 is recorded below)
 ```
 367da7b58830d340952b5676504b25d3af3b05992793fc29e100d6ebe17a24c9  models/retinaface.py (upstream)
+
+## trackeval
+| Folder | Upstream | Commit | Licence |
+|---|---|---|---|
+| trackeval | github.com/JonathonLuiten/TrackEval (`trackeval/metrics/{_base_metric,hota,clear,identity,count}.py`, `trackeval/utils.py`, `trackeval/_timing.py`) | 12c8791b303e0a0b50f753af204249e622d0281a (HEAD on 2026-11-10) | MIT |
+
+Only the metric classes are vendored (no dataset or evaluator classes; `src/video/mot_eval.py` builds the data dict itself). `metrics/__init__.py` is ours and lists the four metrics. Patches: `np.float` replaced by `float` and `np.int` by `int` (removed in NumPy 2) in `hota.py` and `identity.py`. Check of the vendored copy: `scripts/video_trackeval_check.py` (hand-built case with values worked out by hand).
+
+Upstream SHA-256 (before the patches):
+```
+dac8b87bf3801269aa280b1cf91184f483de4f4e5c158bd07a4b1733b1a5722b  trackeval/metrics/_base_metric.py
+c582255c3d36bdb49c3ceeb2a5bd912cee009190dfcfe465b4173d03aaa97d6a  trackeval/metrics/hota.py
+ab3963eac401073fe1b2957c734af1e531368f42fca49627c14422350b2744f0  trackeval/metrics/clear.py
+e76b1bdcbf5b193662431596a984cf70a5be32e903eb5f2a3d9921b4762f93ba  trackeval/metrics/identity.py
+ffce9a3ed557f164f7a811f0a8cf66f609eec0af822dbc87d8fdaef560032163  trackeval/metrics/count.py
+c082ecfbb5061619642b82a034454022806f8e870f774e54dbfbdacaaf097132  trackeval/utils.py
+62e60638efc675bccc35c7da65158f0f19ce31f332121efe7cc748bd92ad2b30  trackeval/_timing.py
+```

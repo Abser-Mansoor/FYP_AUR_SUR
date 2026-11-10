@@ -39,13 +39,19 @@ class Recognizer:
         return x
 
     @torch.no_grad()
-    def get_embedding(self, images):
-        """images: list of HxWx3 BGR uint8 arrays (any size). Returns float32 numpy [N, 512], unit L2 norm."""
-        out = []
+    def get_embedding(self, images, return_raw=False):
+        """images: list of HxWx3 BGR uint8 arrays (any size). Returns float32 numpy [N, 512], unit L2 norm.
+        return_raw=True returns (embeddings, raw_norm[N]): the L2 norm of the UNFLIPPED embedding before normalisation (the MagFace quality,
+        measured as in src/stratify/measure_split.py with magface_norm_flip false). The embeddings are identical either way."""
+        out, raw = [], []
         for s in range(0, len(images), self.batch_size):
             x = self._batch_tensor(images[s:s + self.batch_size])
             e = self._embed(x).float()
+            raw.append(e.norm(dim=1).cpu().numpy())
             if self.pre["flip"]:
                 e = e + self._embed(torch.flip(x, dims=[3])).float()
             out.append(torch.nn.functional.normalize(e, dim=1).cpu().numpy())
-        return np.concatenate(out) if out else np.zeros((0, 512), np.float32)
+        emb = np.concatenate(out) if out else np.zeros((0, 512), np.float32)
+        if return_raw:
+            return emb, (np.concatenate(raw) if raw else np.zeros(0, np.float32))
+        return emb

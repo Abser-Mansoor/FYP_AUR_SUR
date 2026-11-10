@@ -1,0 +1,8 @@
+{
+ "n_faces": 100,
+ "min_cosine_video_vs_phase1": 0.9999998211860657,
+ "return_raw_embedding_equal": true,
+ "n_norms_compared": 100,
+ "max_rel_diff_raw_norm_vs_phase2": 4.360505448666172e-05,
+ "ok": true
+}

@@ -1,0 +1,33 @@
+{
+ "expected": {
+  "MOTA": 0.9,
+  "IDF1": 0.717948717948718,
+  "HOTA": 0.8093207028119322,
+  "IDSW": 1,
+  "CLR_TP": 19,
+  "CLR_FN": 1,
+  "CLR_FP": 0,
+  "IDTP": 14,
+  "IDFN": 6,
+  "IDFP": 5
+ },
+ "got": {
+  "MOTA": 0.9,
+  "IDF1": 0.717948717948718,
+  "HOTA": 0.8093207028119324,
+  "IDSW": 1.0,
+  "CLR_TP": 19.0,
+  "CLR_FN": 1.0,
+  "CLR_FP": 0.0,
+  "IDTP": 14.0,
+  "IDFN": 6.0,
+  "IDFP": 5.0
+ },
+ "perfect": {
+  "MOTA": 1.0,
+  "IDF1": 1.0,
+  "HOTA": 1.0
+ },
+ "ok": true,
+ "note": "hand-built case; the bundled MOT17 sample of TrackEval was not used (it is a separate data download)"
+}

@@ -48,3 +48,26 @@ chunk: 200                   # items per resumable chunk
 # Phase 6 detector selection (fixed before the T4 run): highest WIDER recall on the 16-24 and 24-32 px bins at score 0.5,
 # among (detector, mode) with median 720p runtime <= max_ms on the T4; ties within tie_recall go to the faster one.
 selection: {score: 0.5, bins: ["16-24", "24-32"], max_ms: 100, tie_recall: 0.01}
+
+# ---------------------------------------------------------------- Phase 6: core pipeline (plan: research/Sprint_Notes/Phase6_core_pipeline_plan.md)
+# Recognizers and preprocessing are the Phase 1 settings (configs/baseline.yaml); the video path must give the same embedding as the Phase 1 aligned path.
+recognizers:
+  adaface: models/weights/adaface_ir101_ms1mv2.ckpt
+  magface: models/weights/magface_iresnet100_MS1MV2.pth
+  curricularface: models/weights/CurricularFace_Backbone.pth
+preprocess: {input_size: [112, 112], interp: bilinear, flip: true}
+batch_size: 128
+
+pipeline:
+  out: outputs/video/pipeline            # <out>/<dataset>/<clip>/ : dets.csv, emb_<recognizer>.npy, done.json (resumable per clip)
+  detector_mode: full1280                # Phase 5 choice (official SCRFD preprocessing, NMS 0.45: see the scrfd block above)
+  fps: 30
+  track_input_floor: 0.1                 # the trackers get detections from this score up: ByteTrack's second association needs the low-score detections
+                                         # (the Phase 6 plan said >= 0.5; changed before any run so that ByteTrack is not handicapped)
+  embed_floor: 0.5                       # faces with a score from here up are aligned and embedded
+  recognizers: [adaface]                 # MagFace and CurricularFace are added for the single-frame baseline rows
+
+tracking:                                # re-ID off, camera-motion compensation off (fixed cameras); parameters are the vendored defaults (src/video/track.py)
+  frame_rate: 30
+  match_iou: 0.3                         # mapping a track back to its detection
+  trackers: [bytetrack, botsort]
