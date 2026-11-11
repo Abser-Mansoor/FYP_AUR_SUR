@@ -25,15 +25,24 @@ def list_frames(folder):
     return out
 
 
-def iter_frames(source, fps=30.0, limit=None):
-    """Yields (frame_idx, timestamp_s, bgr). `source` is a folder of images or a video file."""
+def iter_frames(source, fps=30.0, limit=None, errors=None):
+    """Yields (frame_idx, timestamp_s, bgr). `source` is a folder of images or a video file.
+    errors: a list. If given, an unreadable image is appended to it as (frame_idx, message) and yielded with bgr = None (the frame stays in the
+    sequence); if None, the IOError is raised."""
     source = Path(source)
     n = 0
     if source.is_dir():
         for idx, p in list_frames(source):
             if limit is not None and n >= limit:
                 return
-            yield idx, idx / fps, read_bgr(p)
+            try:
+                bgr = read_bgr(p)
+            except IOError as e:
+                if errors is None:
+                    raise
+                errors.append((idx, str(e)))
+                bgr = None
+            yield idx, idx / fps, bgr
             n += 1
         return
     if source.suffix.lower() not in VIDEO_SUFFIXES:

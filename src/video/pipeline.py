@@ -46,22 +46,25 @@ def detect_clip(det, cfg, source, out, limit=None):
     if f.exists():
         return json.loads((Path(out) / "done_detect.json").read_text())
     floor, mode = cfg["pipeline"]["track_input_floor"], cfg["pipeline"]["detector_mode"]
-    frames, fi, dets, kps, shape = [], [], [], [], None
+    frames, fi, dets, kps, shape, bad = [], [], [], [], None, []
     t0 = time.perf_counter()
-    for idx, _ts, bgr in iter_frames(source, cfg["pipeline"]["fps"], limit):
+    for idx, _ts, bgr in iter_frames(source, cfg["pipeline"]["fps"], limit, errors=bad):
+        frames.append(idx)
+        if bgr is None:  # unreadable image: logged in `bad`, the frame stays in the sequence with no detections
+            continue
         shape = bgr.shape[:2]
         d, k = D.detect_mode(det, bgr, mode)
         keep = d[:, 4] >= floor
         d, k = d[keep], k[keep]
-        frames.append(idx)
         fi.extend([idx] * len(d))
         dets.append(d)
         kps.append(k)
     sec = time.perf_counter() - t0
     dets = np.concatenate(dets) if dets else np.zeros((0, 5), np.float32)
     kps = np.concatenate(kps) if kps else np.zeros((0, 5, 2), np.float32)
-    _atomic(f, lambda fh: np.savez(fh, frame_idx=np.array(fi, int), dets=dets, kps=kps, frames=np.array(frames, int), shape=np.array(shape or (0, 0)), seconds_detect=sec))
-    info = dict(n_frames=len(frames), n_dets=int(len(dets)), seconds_detect=sec, ms_per_frame=1000 * sec / max(len(frames), 1))
+    _atomic(f, lambda fh: np.savez(fh, frame_idx=np.array(fi, int), dets=dets, kps=kps, frames=np.array(frames, int), shape=np.array(shape or (0, 0)), unreadable=np.array([i for i, _ in bad], int), seconds_detect=sec))
+    info = dict(n_frames=len(frames), n_dets=int(len(dets)), n_unreadable=len(bad), unreadable_frames=[i for i, _ in bad][:20], seconds_detect=sec,
+                ms_per_frame=1000 * sec / max(len(frames), 1))
     _atomic(Path(out) / "done_detect.json", lambda fh: fh.write(json.dumps(info).encode()))
     return info
 
@@ -107,9 +110,9 @@ def embed_clip(embedder, cfg, source, out, limit=None):
         by_frame.setdefault(int(fi[r]), []).append(r)
     ids, embs, mag, lum, lap = [], {n: [] for n in embedder.recs}, [], [], []
     t0 = time.perf_counter()
-    for idx, _ts, bgr in iter_frames(source, cfg["pipeline"]["fps"], limit):
+    for idx, _ts, bgr in iter_frames(source, cfg["pipeline"]["fps"], limit, errors=[]):
         rows = by_frame.get(idx)
-        if not rows:
+        if not rows or bgr is None:
             continue
         r = embedder.embed(bgr, kps[rows])
         ids.extend(rows)
