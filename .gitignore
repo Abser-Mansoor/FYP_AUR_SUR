@@ -53,6 +53,9 @@
 !/outputs/video/baseline/
 /outputs/video/baseline/emb/
 !/outputs/video/bench7/
+!/outputs/video/studyC/
+/outputs/video/studyC/pack/
+/outputs/video/studyC/*.zip
 /outputs/video/bench7/emb/
 !/outputs/video/pipeline_timings.csv
 !/outputs/video/appendix/
