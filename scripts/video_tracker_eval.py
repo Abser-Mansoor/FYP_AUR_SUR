@@ -57,8 +57,9 @@ def clip_frames(clip):
     return [i for i, _ in list_frames(ROOT / "Dataset/ChokePoint" / clip)]
 
 
-def pred_from_tracks(csv, tracker):
+def pred_from_tracks(csv, tracker, min_score=0.0):
     df = pd.read_csv(csv)
+    df = df[df["score"] >= min_score]
     df = df[df[f"tid_{tracker}"] >= 0]
     out = {}
     for f, r in df.groupby("frame"):
@@ -110,6 +111,7 @@ def main():
     ap.add_argument("--config", default="configs/video.yaml")
     ap.add_argument("--gt-check", action="store_true")
     ap.add_argument("--eval", action="store_true")
+    ap.add_argument("--min-score", type=float, default=0.0, help="sensitivity: score only tracked boxes with detector score >= this (post-hoc filter on the same tracker run); outputs get a _minscore suffix")
     ap.add_argument("--clips", nargs="+", default=None)
     a = ap.parse_args()
     cfg = yaml.safe_load(open(ROOT / a.config))
@@ -137,11 +139,12 @@ def main():
                 continue
             frames = [int(x) for x in np.load(pdir / clip / "detections.npz")["frames"]]
             for t in res:
-                res[t][clip] = M.clip_metrics(gt[clip], pred_from_tracks(f, t), frames)
+                res[t][clip] = M.clip_metrics(gt[clip], pred_from_tracks(f, t, a.min_score), frames)
         rows = [dict(tracker=t, clip=c, **{k: r[k] for k in KEYS}) for t in res for c, r in res[t].items()]
-        pd.DataFrame(rows).to_csv(OUT / "per_clip.csv", index=False, float_format="%.6f")
-        pd.DataFrame(table(res, "all GT clips")).to_csv(OUT / "pooled.csv", index=False, float_format="%.6f")
-        print(pd.read_csv(OUT / "pooled.csv")[["tracker", "n_clips"] + KEYS].round(4).to_string())
+        sfx = f"_minscore{a.min_score:g}" if a.min_score else ""
+        pd.DataFrame(rows).to_csv(OUT / f"per_clip{sfx}.csv", index=False, float_format="%.6f")
+        pd.DataFrame(table(res, "all GT clips" + sfx)).to_csv(OUT / f"pooled{sfx}.csv", index=False, float_format="%.6f")
+        print(pd.read_csv(OUT / f"pooled{sfx}.csv")[["tracker", "n_clips"] + KEYS].round(4).to_string())
 
 
 if __name__ == "__main__":

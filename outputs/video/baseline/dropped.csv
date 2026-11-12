@@ -1,0 +1,13 @@
+recognizer,condition,direction,dropped_ids,dropped_probes
+adaface,SC,G1->G2,[],0
+adaface,SC,G2->G1,[],0
+adaface,MC,G1->G2,[],0
+adaface,MC,G2->G1,[],0
+magface,SC,G1->G2,[],0
+magface,SC,G2->G1,[],0
+magface,MC,G1->G2,[],0
+magface,MC,G2->G1,[],0
+curricularface,SC,G1->G2,[],0
+curricularface,SC,G2->G1,[],0
+curricularface,MC,G1->G2,[],0
+curricularface,MC,G2->G1,[],0

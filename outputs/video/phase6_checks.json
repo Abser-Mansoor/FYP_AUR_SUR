@@ -1,0 +1,40 @@
+{
+ "coverage": {
+  "n_clips": 78,
+  "n_gt": 72,
+  "n_crowded": 6,
+  "total_frames": 181599,
+  "unreadable": {
+   "P2E_S1_C2.1": [
+    359
+   ],
+   "P2E_S1_C3.2": [
+    33,
+    211,
+    399
+   ]
+  },
+  "failures": [],
+  "ok": true
+ },
+ "determinism": {
+  "clip": "P2L_S4_C3.2",
+  "detections": {
+   "dets": "identical",
+   "frame_idx": "identical",
+   "frames": "identical",
+   "kps": "identical",
+   "shape": "identical",
+   "unreadable": "identical"
+  },
+  "embed": {
+   "det_id": "identical",
+   "emb_adaface": "identical",
+   "lap_var": "identical",
+   "lum": "identical",
+   "mag_norm": "identical"
+  },
+  "tracks_csv_identical": true,
+  "ok_byte_identical": true
+ }
+}

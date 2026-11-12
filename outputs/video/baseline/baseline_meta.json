@@ -1,0 +1,17 @@
+{
+ "totals": {
+  "n_det": 127915,
+  "n_fp": 56571,
+  "n_gt": 72289,
+  "n_matched": 71344
+ },
+ "left_out_identities": [
+  3,
+  13,
+  14,
+  19,
+  21,
+  26
+ ],
+ "n_identities": 29
+}

@@ -1,0 +1,12 @@
+{
+ "torch": "2.14.1+cu130",
+ "cuda": "13.0",
+ "gpu": "Tesla T4",
+ "onnxruntime": "1.31.1",
+ "ort_providers": [
+  "TensorrtExecutionProvider",
+  "CUDAExecutionProvider",
+  "CPUExecutionProvider"
+ ],
+ "python": "3.13.16"
+}

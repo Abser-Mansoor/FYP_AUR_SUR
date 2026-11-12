@@ -1,0 +1,4 @@
+stage,unit,n_clips,n_units,median_ms_per_unit,pooled_ms_per_unit,p10_clip,p90_clip
+detect,frame,78,181599,77.980,80.370,49.588,104.701
+track,frame,78,181599,0.394,0.533,0.310,0.860
+embed,face,78,148658,51.736,55.310,31.914,108.812
