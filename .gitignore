@@ -87,3 +87,5 @@ desktop.ini
 # diagnostic logs of the Phase 5 AP-gate investigation (after the global *.log rule so they are kept)
 !/outputs/video/detstudy/_diag/*.log
 !/outputs/video/detstudy/_diag/refeval/*.log
+scripts/.venv
+outputs/video/studyC/Abser/img/
