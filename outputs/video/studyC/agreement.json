@@ -1,0 +1,18 @@
+{
+ "n_shared": 50,
+ "all_three_agree": 0.86,
+ "pairwise_agreement": {
+  "abser-raghib": 0.92,
+  "abser-umar": 0.86,
+  "raghib-umar": 0.92
+ },
+ "fleiss_kappa": 0.8592870544090055,
+ "kappa_below_threshold_0_60": false,
+ "label_counts": {
+  "a": 57,
+  "o": 43,
+  "r": 36,
+  "n": 4,
+  "u": 10
+ }
+}

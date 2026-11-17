@@ -38,11 +38,11 @@ Question: how well does one frame, identified on its own, recognise a person on 
 ---
 
 ## 1. Summary
-**Status:** results complete except the items in section 10; pending supervisor review at the end-of-W4 checkpoint. Plan: `research/Sprint_Notes/Phase6_core_pipeline_plan.md`. Sections 0 and 0b were committed before the numbers they govern.
+**Status:** results complete except the items in section 10; pending supervisor review at the end-of-W4 checkpoint. Plan: `research/Sprint_Notes/Phase6_core_pipeline_plan.md`. Sections 0 and 0b were committed before the numbers they govern. Study C (the audit of unmatched detections) was completed on 2026-11-17 (section 6b).
 
 - **Built and checked.** An end-to-end path on ChokePoint: frames, SCRFD detection (Phase 5 choice), 5-point alignment, AdaFace embedding with the MagFace raw norm as a quality read-out, ByteTrack and BoT-SORT tracking, TrackEval metrics (vendored). All five acceptance checks pass (section 3). The run covers 78 clips and 181,599 frames; four corrupt dataset JPEGs are logged, not hidden.
 - **Trackers.** On the 72 ground-truth clips both trackers give HOTA about 0.49 to 0.50 and IDF1 about 0.70 to 0.71; ID switches are 3 (ByteTrack) and 4 (BoT-SORT) in total. The two trackers are within each other's confidence intervals on every metric, so this report does not name a winner (section 4).
-- **False positives are an annotation and scene effect, not detector quality.** 56,571 detections match no ground-truth box. In the frames we looked at, they are faces of people the eye annotation does not label and the reflection of the subject in a glass door. MOTA and DetA therefore understate the detector and are not reported as a quality score here (section 4).
+- **False positives are mostly an annotation effect, not detector quality.** 56,571 detections (score 0.5 and above) match no ground-truth box. The pre-registered audit (study C, section 6b) labelled a seeded sample of 350 by eye, with Fleiss' kappa 0.86 on the 50 crops all three labellers saw. Per detection, 0.849 (CI 0.773 to 0.914) of the unmatched detections are live faces the eye annotation does not cover: about 48,000 of the 56,571. Only 0.128 (0.070 to 0.197) are not a live face, almost all reflections or images of a face: about 7,200. MOTA and DetA therefore understate the detector and are not reported as a quality score here (section 4).
 - **The single-frame baseline is at ceiling.** All three recognizers reach Rank-1 of 0.9987 to 0.9998 on the pre-registered protocol (section 5). A baseline with no room to improve cannot be used to judge Phase 7's aggregation, so the benchmark for Phase 7 was redefined before any further number (section 0b; results in section 6).
 - **Detector mode finding (Appendix T1).** On cropped YouTube Faces frames `full1280` finds the face in 5.0% of frames and `full640` in 98.1%, because `full1280` upscales faces beyond what SCRFD detects. ChokePoint is not affected (faces 48 to 174 px at 800 x 600), but footage with large faces would be (section 8).
 
@@ -61,7 +61,7 @@ Details: `outputs/video/phase6_checks.json` (tables below).
 Ground truth: eye labels turned into boxes with the Phase 5 rule, identity = person id (`video_tracker_eval.py`). Both trackers run on the same detections (re-ID off, no camera-motion compensation, vendored defaults, 30 fps).
 - **Result.** See the tracker table. Identity metrics are the useful ones here: AssA and IDF1 and the ID-switch count. The ground-truth tracks are short and clean and only 906 ground-truth faces are missed (under 1%), so ID switches are rare for both trackers; this says the footage is easy for association, not that the trackers are proven on hard footage.
 - **No winner.** The point differences between ByteTrack and BoT-SORT are small and the bootstrap CIs overlap on every metric.
-- **The false-positive count (about 57,000) does not measure the detector.** It is concentrated in the portal-2 clips, where several people walk through together (P2E 18,334 and P2L 28,756 of 57,614 ByteTrack FP, against FN of 45 and 18). The median score of these detections is 0.8 and 86% are at or above 0.5. Scoring only detections at 0.5 and above removes about 4,500 FP and moves MOTA from 0.19 to 0.25 (second row of the tracker table), so the extras are mostly confident detections. Overlays of six seeded frames of P2E_S3_C1.1 (`outputs/video/overlays_fp/`, local only) were opened for two frames before this text was written: they show (a) the reflection of the walking person in the glass door, detected at about 0.7, and (b) the subject's own face detected at about 0.7 in frames where the annotation has no box (no ground-truth row within 10 frames). 28% of the at-or-above-0.5 detections in that clip are centred left of x = 230, where the door is. Two frames of one clip is a small sample; the split between reflections and unannotated faces is not quantified. This is the question that study C (section 0b) is meant to answer with a manual audit.
+- **The false-positive count (about 57,000) does not measure the detector.** It is concentrated in the portal-2 clips, where several people walk through together (P2E 18,334 and P2L 28,756 of 57,614 ByteTrack FP, against FN of 45 and 18). The median score of these detections is 0.8 and 86% are at or above 0.5. Scoring only detections at 0.5 and above removes about 4,500 FP and moves MOTA from 0.19 to 0.25 (second row of the tracker table), so the extras are mostly confident detections. Overlays of six seeded frames of P2E_S3_C1.1 (`outputs/video/overlays_fp/`, local only) were opened for two frames before this text was written: they show (a) the reflection of the walking person in the glass door, detected at about 0.7, and (b) the subject's own face detected at about 0.7 in frames where the annotation has no box (no ground-truth row within 10 frames). 28% of the at-or-above-0.5 detections in that clip are centred left of x = 230, where the door is. Two frames of one clip is a small sample. Study C (section 6b) measures the split on a seeded sample of 350 unmatched detections. About 85% are live faces without an annotation and about 13% are reflections or images of a face. Detections that are not faces at all are rare (0.001).
 - **Consequence for reporting.** MOTA, DetA and the FP column are shown in the table but are not quoted as detector or tracker quality; HOTA also includes DetA and is shown with this caveat. A per-camera ignore region for the glass door was considered and not used (it needs a pre-registered rule per camera); Abser chose reporting with the caveat on 2026-11-12.
 
 ## 5. Single-frame identification baseline (section 0, run as written)
@@ -77,7 +77,55 @@ Run as written in section 0b (`scripts/video_phase7_bench.py`; tables in section
 - **D (stricter operating points).** Reading the baseline at FPIR 0.1 and 0.01 does not create room by itself: at FPIR 0.01 TPIR20 is still 0.974 to 0.988 (AdaFace, MagFace, CurricularFace; SC and MC). With 6 left-out identities the 0.01 point is the least certain number in the report.
 - **B (thin gallery).** One frame per identity lowers the baseline a little and shows a spread across draws. Rank-1 with k = 1 is 0.9951 (SC) and 0.9939 (MC) for AdaFace, 0.9930 and 0.9891 for MagFace and 0.9904 and 0.9862 for CurricularFace; the worst single draw is 0.952 (CurricularFace, MC). TPIR20 at FPIR 0.01 falls to 0.87 to 0.94. With five frames per identity the numbers are back to 0.997 to 0.999. So a single enrolment frame costs about 0.5 to 1.3 points of Rank-1 and about 5 to 11 points of TPIR at FPIR 0.01, and AdaFace is the most robust of the three, but the headroom is small on this footage (frontal faces, 29 people). The CI of the mean is over identities and the spread over the 20 draws is shown next to it.
 - **E (degraded probes, AdaFace).** The probe side is the only knob that moves the result a lot. Rank-1 stays at 0.9993 to 1.0000 down to 24 px (SC), then falls: 0.9936 at 16 px and **0.8387 at 12 px** (SC; MC 0.9946 and 0.8539). TPIR20 at FPIR 0.01 falls from 0.99 at 56 px to 0.90 at 16 px and 0.37 at 12 px. The mean MagFace norm of the probes falls steadily with the side (25.98 at 56 px to 22.09 at 12 px, SC), so the quality read-out tracks the degradation. The two directions agree (12 px: 0.850 and 0.827 SC). This is a synthetic resolution loss (area downsampling, bilinear upsampling, no blur, noise or compression) on faces that were detected at their native size; it says where single-frame recognition fails for this recognizer, not how a real 12 px face in a surveillance frame would behave.
-- **What Phase 7 should use.** The informative region is probes at 16 px and 12 px (and the thin gallery with k = 1). At 12 px a single frame is wrong for about 16% of probes, so per-track aggregation has real room to improve there; at 24 px and above it has none. Phase 7's primary comparison should therefore be the single-frame rows against aggregated rows at 16 px and 12 px, plus B with k = 1, each pre-registered before it is run. C (unmatched detections as unmated probes) is not part of these numbers; it waits for its audit.
+- **What Phase 7 should use.** The informative region is probes at 16 px and 12 px (and the thin gallery with k = 1). At 12 px a single frame is wrong for about 16% of probes, so per-track aggregation has real room to improve there; at 24 px and above it has none. Phase 7's primary comparison should therefore be the single-frame rows against aggregated rows at 16 px and 12 px, plus B with k = 1, each pre-registered before it is run. C (unmatched detections as unmated probes) is not part of these numbers. Its audit (section 6b) shows that the unmatched detections cannot serve as unmated probes.
+
+## 6b. Study C: audit of the unmatched detections
+Run as pre-registered in `research/Sprint_Notes/Phase6_studyC_audit_protocol.md` (version 1 with Amendment 1; the copy in the labelling pack is the same text). Tool: `scripts/video_studyC_audit.py` (`agreement`, then `analyze`). Outputs in `outputs/video/studyC/`: `agreement.json`, `final_labels.csv`, `composition.csv`. Two runs of `agreement` and `analyze` gave byte-identical outputs. They were run on a home PC (CPU only; numpy 2.5.5, pandas 3.1.1). No GPU is involved.
+
+- **Sample.**
+  - 350 track fragments were drawn from 5,234 (seed 42). The population is the 56,571 unmatched detections at score 0.5 and above.
+  - Each sampled crop is weighted by the number of unmatched detections in its fragment, so all shares below are per detection.
+  - Three labellers (Abser, Raghib, Umar) labelled the crops at home from the pre-rendered pack. Each saw the 50 shared crops and 100 own crops.
+- **Sample integrity.** The pack records the sha256 of `sheet.csv` as `69c9572e...`. The repo copy hashes to `ca104d64...` because git stored the lab PC's CRLF file with LF line endings. With CRLF restored the hash is `69c9572e...`, so the sample is unchanged.
+- **Agreement (shared 50).**
+  - Fleiss' kappa over the five labels: **0.859**, above the 0.60 threshold, so the protocol did not need a version 2.
+  - All three labellers agree on 0.86 of the crops.
+  - Pairwise agreement: Abser-Raghib 0.92, Abser-Umar 0.86, Raghib-Umar 0.92.
+- **Deviation from the procedure.** The protocol puts the agreement check between Stage 1 (shared 50) and Stage 2 (own 100). The check was attempted after Stage 1, but it failed on a path bug in the tool, which was fixed on 2026-11-17. The bug: run from a copy outside `scripts/`, the tool resolved its paths from the copy's location and found no label files. The own crops were labelled before kappa was computed. Kappa is 0.859, above the threshold, so no rule would have changed. The order of work is recorded here as a deviation.
+- **Composition** (cluster bootstrap over clips, 1,000 draws, seed 42; estimated counts = share × 56,571):
+
+| outcome | share of unmatched detections (95% CI) | estimated count of 56,571 |
+|---|---|---|
+| not a live face (r+n) | 0.128 (0.070-0.197) | 7,231 |
+| reflection or image (r) | 0.127 (0.069-0.196) | 7,170 |
+| not a face (n) | 0.001 (0.000-0.002) | 62 |
+| live face, annotated person (a) | 0.440 (0.337-0.546) | 24,917 |
+| live face, other person (o) | 0.409 (0.299-0.506) | 23,128 |
+| any live face (a+o) | 0.849 (0.773-0.914) | 48,044 |
+| unclear (u) | 0.023 (0.004-0.064) | 1,295 |
+| sensitivity: u counted as not a live face | 0.151 (0.086-0.227) | 8,527 |
+| sensitivity: u counted as live face | 0.872 (0.803-0.930) | 49,340 |
+
+| stratum | n sampled | not a live face (r+n) | live face, annotated person (a) | live face, other person (o) | unclear (u) |
+|---|---|---|---|---|---|
+| group P1E | 48 | 0.005 (0.000-0.016) | 0.756 (0.513-0.973) | 0.239 (0.019-0.484) | 0.000 (0.000-0.000) |
+| group P1L | 45 | 0.003 (0.000-0.013) | 0.656 (0.373-0.976) | 0.341 (0.020-0.627) | 0.000 (0.000-0.000) |
+| group P2E | 108 | 0.162 (0.055-0.353) | 0.520 (0.346-0.713) | 0.319 (0.072-0.519) | 0.000 (0.000-0.000) |
+| group P2L | 149 | 0.144 (0.068-0.242) | 0.319 (0.187-0.448) | 0.493 (0.351-0.623) | 0.043 (0.008-0.116) |
+| band 0.5-0.7 | 201 | 0.212 (0.106-0.360) | 0.278 (0.119-0.496) | 0.416 (0.177-0.607) | 0.093 (0.018-0.244) |
+| band 0.7-0.85 | 128 | 0.146 (0.057-0.236) | 0.355 (0.223-0.513) | 0.499 (0.334-0.654) | 0.000 (0.000-0.000) |
+| band >=0.85 | 21 | 0.000 (0.000-0.000) | 0.802 (0.631-0.998) | 0.198 (0.003-0.368) | 0.000 (0.000-0.000) |
+
+- **Primary outcome.** The detector's real false-positive share on this footage is **0.128 (0.070 to 0.197)** of the unmatched detections, about 7,200 of 56,571. Almost all of these are reflections or images of a face. Counting the unclear crops as not a live face raises the share to 0.151 (0.086 to 0.227).
+- **Where the false positives are.**
+  - The not-a-live-face share is near zero in portal 1: P1E 0.005, P1L 0.003. In portal 2 it is 0.162 (P2E) and 0.144 (P2L). This fits the glass door seen in the section 4 overlays.
+  - The share falls with detector score: 0.212 for scores 0.5 to 0.7, 0.146 for 0.7 to 0.85, and 0.000 at 0.85 and above. The top band has only 21 sampled crops, so its CI is not informative beyond "rare".
+- **Annotation gap.** About 0.44 of the unmatched detections are faces of a person annotated in the same clip, in frames the eye annotation skips. Another 0.41 are faces of other people. So most of the "false positives" in the tracker table are real faces.
+- **Weighting matters.** Unweighted, 0.30 of the 350 sampled crops are `r` or `n`. The weighted per-detection share is lower (0.128) because long fragments, which carry most detections, are mostly live faces. The weighted share is the pre-registered estimate.
+- **What study C does not say** (protocol section 8):
+  - `o` means "not one of the shown reference people", not "not enrolled". Study C therefore supplies no confirmed unmated probes, and no open-set false-accept number comes from it. The C protocol of section 0b (unmatched detections as unmated probes) is **not run**: 0.849 of the candidate probes are live faces of unknown identity, and about half of these are annotated people.
+  - MOTA and DetA are not recomputed from the sample.
+  - Labels are human judgements by people who know the project. Kappa shows they were consistent with one another, not that they were right.
 
 ## 7. Stage timings
 See the timings table. Lab PC, RTX 4000 Ada, ONNX Runtime CUDA provider, 800 x 600 frames, `full1280`. Detect (about 80 ms per frame pooled) is the dominant stage and includes JPEG decoding; embedding (about 55 ms per face pooled) includes decoding, alignment, flip-sum for AdaFace and the MagFace norm pass; tracking is under 1 ms per frame for both trackers together. The lab PC is shared, and the clip-level spread (detect 50 to 105 ms between the 10th and 90th percentile) is real. These are not real-time figures for a 30 fps stream at 1280 px: detection alone is about 12 fps.
@@ -98,9 +146,10 @@ See the timings table. Lab PC, RTX 4000 Ada, ONNX Runtime CUDA provider, 800 x 6
 - B and E are designed to add difficulty, not to model a real watch list or real degradation (E is a controlled resolution loss; no blur, noise or compression).
 - Appendix T1 uses cropped frames and a 5,000-frame sample; it is not the official full-frame benchmark.
 - The Colab T4 and the lab PC give different timings; they are never pooled.
+- Study C rests on 350 labelled crops. Its group and score-band shares have wide CIs, and its labels are human judgements made at home on uncontrolled screens. The agreement check ran after both labelling stages instead of between them (section 6b); kappa 0.859 shows this did not matter for the rules.
 
 ## 10. Decisions and open items for the checkpoint
-1. **Phase 7 benchmark.** B, D and E as the benchmark (decided 2026-11-12); C as an audited study in parallel with Phase 7. The audit protocol (sample size, labelling sheet, analysis) is to be written and committed before labelling starts. Who labels and when is open.
+1. **Phase 7 benchmark.** B, D and E as the benchmark (decided 2026-11-12). The study C audit is done (section 6b). Of the unmatched detections, 0.849 are live faces without an annotation and 0.128 are reflections or images. C as an unmated-probe benchmark is therefore not usable without identity-level labelling. Decide whether to drop it, or to pre-register an identity-level labelling for Phase 7 (protocol section 8).
 2. **Official YouTube Faces** by Tuesday 2026-11-17; then the full-frame T1 and the YTF verification protocol. Record source, licence, SHA-256 and the verified counts in `DATASETS.md` on arrival.
 3. **Detector mode for large faces.** Fixed `full1280` (current) or size-dependent. To be decided with the YouTube Faces numbers.
 4. **Appendix T2** (custom video): carried into Phase 7, gated on written supervisor approval and signed consent.

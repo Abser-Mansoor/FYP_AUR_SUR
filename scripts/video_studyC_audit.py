@@ -6,9 +6,10 @@ Lab PC (once):
 Labellers (any PC with Python, opencv-python, numpy, pandas; needs only the pack folder and this script):
     python video_studyC_audit.py label --who abser --pack <pack folder> [--stage shared|own]
     keys: a o r n u = label, b = back one crop, q = save and quit. Labels are saved to <pack>/labels_<who>.csv after every key; send that small file back.
-Lab PC again (labels copied to outputs/video/studyC/):
+Lab PC again (labels copied to outputs/video/studyC/; run from the repo copy in scripts/, since paths resolve from the script's location):
     envs/video/Scripts/python.exe scripts/video_studyC_audit.py agreement   # Fleiss kappa on the 50 shared crops
     envs/video/Scripts/python.exe scripts/video_studyC_audit.py analyze     # final labels and composition with CIs
+    Both take --dir <folder> if sheet.csv, sheet_meta.json and the label files are somewhere else; outputs are written to that folder.
 
 Labels: a live face / annotated person, o live face / other person, r reflection or image of a face, n not a face, u unclear.
 The images show no score, track or recogniser output, and the pack sheet has only sample_id and assignment.
@@ -130,8 +131,8 @@ def pack(a):
     print(len(S), "images in", d, "- size MB:", round(sum(p.stat().st_size for p in (d / "img").iterdir()) / 1e6, 1))
 
 
-def read_labels(who):
-    f = OUT / f"labels_{who}.csv"
+def read_labels(who, d=OUT):
+    f = d / f"labels_{who}.csv"
     return pd.read_csv(f, dtype={"label": str}) if f.exists() else pd.DataFrame(columns=["sample_id", "label"])
 
 
@@ -178,10 +179,16 @@ def fleiss(M):
     return float((Pbar - Pe) / (1 - Pe)) if Pe < 1 else 1.0
 
 
+def study_dir(a):
+    """Folder holding sheet.csv, sheet_meta.json and labels_<who>.csv; outputs go there too (default outputs/video/studyC)."""
+    return Path(a.dir).resolve() if a is not None and getattr(a, "dir", None) else OUT
+
+
 def agreement(a=None):
-    S = pd.read_csv(OUT / "sheet.csv")
+    d = study_dir(a)
+    S = pd.read_csv(d / "sheet.csv")
     sh = S[S.assigned == "all"].sample_id.tolist()
-    L = {w: read_labels(w).set_index("sample_id").label for w in WHO}
+    L = {w: read_labels(w, d).set_index("sample_id").label for w in WHO}
     missing = {w: [s for s in sh if s not in L[w].index] for w in WHO}
     if any(missing.values()):
         sys.exit("shared crops not yet labelled: " + json.dumps({w: len(v) for w, v in missing.items()}))
@@ -190,14 +197,15 @@ def agreement(a=None):
     pair = {f"{x}-{y}": float(np.mean([L[x][s] == L[y][s] for s in sh])) for i, x in enumerate(WHO) for y in WHO[i + 1:]}
     res = dict(n_shared=len(sh), all_three_agree=float(np.mean(M.max(1) == 3)), pairwise_agreement=pair, fleiss_kappa=fleiss(M), kappa_below_threshold_0_60=bool(fleiss(M) < 0.60),
                label_counts={c: int(M[:, i].sum()) for i, c in enumerate(cats)})
-    (OUT / "agreement.json").write_text(json.dumps(res, indent=1))
+    (d / "agreement.json").write_text(json.dumps(res, indent=1))
     print(json.dumps(res, indent=1))
 
 
 def analyze(a=None):
-    S = pd.read_csv(OUT / "sheet.csv")
-    meta = json.loads((OUT / "sheet_meta.json").read_text())
-    L = {w: read_labels(w).set_index("sample_id").label for w in WHO}
+    d = study_dir(a)
+    S = pd.read_csv(d / "sheet.csv")
+    meta = json.loads((d / "sheet_meta.json").read_text())
+    L = {w: read_labels(w, d).set_index("sample_id").label for w in WHO}
     final = []
     for r in S.itertuples():
         if r.assigned == "all":
@@ -214,7 +222,7 @@ def analyze(a=None):
     S["final"] = final
     S["band"] = pd.cut(S.score, [0.5, 0.7, 0.85, 1.01], right=False, labels=["0.5-0.7", "0.7-0.85", ">=0.85"]).astype(str)
     S["group"] = S["clip"].str[:3]
-    S.to_csv(OUT / "final_labels.csv", index=False, float_format="%.3f")
+    S.to_csv(d / "final_labels.csv", index=False, float_format="%.3f")
     total = meta["n_unmatched_total"]
 
     def share(df, classes):
@@ -239,7 +247,7 @@ def analyze(a=None):
             p = share(sub, cl)
             lo, hi = boot(sub, cl) if len(sub) else (np.nan, np.nan)
             rows.append(dict(stratum=sname, outcome=name, n_sampled=len(sub), share=p, ci_lo=lo, ci_hi=hi, est_count_in_stratum_total=p * total if sname == "all" else np.nan))
-    pd.DataFrame(rows).to_csv(OUT / "composition.csv", index=False, float_format="%.4f")
+    pd.DataFrame(rows).to_csv(d / "composition.csv", index=False, float_format="%.4f")
     print(pd.DataFrame(rows).query("stratum == 'all'")[["outcome", "n_sampled", "share", "ci_lo", "ci_hi", "est_count_in_stratum_total"]].round(3).to_string(index=False))
 
 
@@ -252,7 +260,7 @@ if __name__ == "__main__":
     p.add_argument("--pack", default=None, help="the pack folder (default: outputs/video/studyC/pack)")
     p.add_argument("--stage", default="shared", choices=["shared", "own"], help="shared = the 50 crops all three label first; own = your 100")
     sub.add_parser("pack")
-    sub.add_parser("agreement")
-    sub.add_parser("analyze")
+    for cmd in ("agreement", "analyze"):
+        sub.add_parser(cmd).add_argument("--dir", default=None, help="folder with sheet.csv, sheet_meta.json and labels_<who>.csv (default: outputs/video/studyC)")
     a = ap.parse_args()
     {"sample": sample, "pack": pack, "label": label, "agreement": agreement, "analyze": analyze}[a.cmd](a)
