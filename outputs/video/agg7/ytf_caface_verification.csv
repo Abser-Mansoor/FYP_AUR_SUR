@@ -1,0 +1,4 @@
+method,accuracy,accuracy_se,auc,tar_far0_01,tar_far0_1,n_pairs,accuracy_min_draw,accuracy_max_draw
+single frame (mean of 20 draws),0.96133,0.00303,0.98106,0.93359,0.95829,4986,0.95748,0.96450
+R1 (plain mean of CAFace-backbone features),0.96951,0.00308,0.98463,0.94752,0.96715,4986,,
+CAFace aggregator,0.96931,0.00342,0.98445,0.94832,0.96635,4986,,

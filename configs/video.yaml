@@ -71,3 +71,10 @@ tracking:                                # re-ID off, camera-motion compensation
   frame_rate: 30
   match_iou: 0.3                         # mapping a track back to its detection
   trackers: [bytetrack, botsort]
+
+# ---------------------------------------------------------------- Phase 7: aggregation and YouTube Faces (protocol: REPORT_phase7.md section 0)
+ytf:
+  detector_mode: full640        # Phase 6 Appendix T1: full1280 misses large faces on cropped YTF frames (5.0% vs 98.1%); ChokePoint keeps full1280
+  score_floor: 0.5              # the embedding floor of the Phase 6 pipeline
+  iou: 0.5                      # the subject = best-IoU detection with the labelled box, accepted from this IoU
+  max_frames: 50                # evenly spaced among the labelled frames of a video

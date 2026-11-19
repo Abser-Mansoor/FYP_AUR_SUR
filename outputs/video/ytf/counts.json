@@ -1,0 +1,37 @@
+{
+ "n_videos_in_meta": 3425,
+ "n_people_in_meta": 1595,
+ "n_videos_with_labels": 3425,
+ "n_videos_without_labels": 0,
+ "n_people_with_labels": 1595,
+ "n_pairs": 5000,
+ "n_folds": 10,
+ "same_per_fold": [
+  250,
+  250,
+  250,
+  250,
+  250,
+  250,
+  250,
+  250,
+  250,
+  250
+ ],
+ "pairs_per_fold": [
+  500,
+  500,
+  500,
+  500,
+  500,
+  500,
+  500,
+  500,
+  500,
+  500
+ ],
+ "frames_selected": 171021,
+ "videos_below_50_labelled_frames": 202,
+ "selected_frames_missing_on_disk": 0,
+ "pairs_with_a_video_without_frames": 0
+}

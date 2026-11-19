@@ -1,0 +1,16 @@
+{
+ "primary_statistic": "mean over clips of the per-clip IDF1 difference (ByteTrack minus BoT-SORT) averaged over S1-S5",
+ "mean_difference": 0.048175191666666665,
+ "ci95": [
+  0.03509450583333333,
+  0.06094198833333333
+ ],
+ "n_clips": 72,
+ "ci_excludes_zero": true,
+ "provisional_default": "bytetrack",
+ "rule": "CI excludes zero -> tracker with higher IDF1, else ByteTrack",
+ "clips_bytetrack_better": 58,
+ "clips_equal": 0,
+ "clips_botsort_better": 14,
+ "protocol_paragraph_sha256": "40fee3973096d9bb8e12e73e57eedcf1d5b65a020417d9a2c21278e5a8251ddd"
+}

@@ -1,0 +1,417 @@
+{
+ "unit": {
+  "check1_length1": {
+   "R1": true,
+   "R2": true,
+   "R3_k1": true,
+   "R3_k3": true,
+   "R3_k5": true,
+   "R3_k10": true,
+   "R4": true,
+   "R4*": true,
+   "R5": true,
+   "R6": true
+  },
+  "check1_topk_N_equals_mean": {
+   "3": true,
+   "7": true,
+   "25": true
+  },
+  "check2_shuffle_invariance": {
+   "3": {
+    "R1": true,
+    "R2": true,
+    "R3_k1": true,
+    "R3_k3": true,
+    "R3_k5": true,
+    "R3_k10": true,
+    "R4": true,
+    "R4*": true,
+    "R5": true,
+    "R6": true
+   },
+   "7": {
+    "R1": true,
+    "R2": true,
+    "R3_k1": true,
+    "R3_k3": true,
+    "R3_k5": true,
+    "R3_k10": true,
+    "R4": true,
+    "R4*": true,
+    "R5": true,
+    "R6": true
+   },
+   "25": {
+    "R1": true,
+    "R2": true,
+    "R3_k1": true,
+    "R3_k3": true,
+    "R3_k5": true,
+    "R3_k10": true,
+    "R4": true,
+    "R4*": true,
+    "R5": true,
+    "R6": true
+   }
+  },
+  "all_pass": true
+ },
+ "check3_single_frame_reference": {
+  "all_equal": true,
+  "rows": [
+   {
+    "cond": "SC",
+    "size": 112,
+    "direction": "G1->G2",
+    "point": [
+     0.9999294731645391,
+     0.9999087258123402,
+     0.9989047097480832,
+     0.9887732749178533
+    ],
+    "reference": [
+     0.99993,
+     0.99991,
+     0.9989,
+     0.98877
+    ],
+    "equal_to_5_decimals": true
+   },
+   {
+    "cond": "SC",
+    "size": 112,
+    "direction": "G2->G1",
+    "point": [
+     0.9996405205262779,
+     0.9996248710494232,
+     0.9988746131482698,
+     0.9878083091062553
+    ],
+    "reference": [
+     0.99964,
+     0.99962,
+     0.99887,
+     0.98781
+    ],
+    "equal_to_5_decimals": true
+   },
+   {
+    "cond": "SC",
+    "size": 16,
+    "direction": "G1->G2",
+    "point": [
+     0.9957731595632265,
+     0.9927007299270073,
+     0.9808394160583942,
+     0.927007299270073
+    ],
+    "reference": [
+     0.99577,
+     0.9927,
+     0.98084,
+     0.92701
+    ],
+    "equal_to_5_decimals": true
+   },
+   {
+    "cond": "SC",
+    "size": 16,
+    "direction": "G2->G1",
+    "point": [
+     0.9913947651487989,
+     0.9901823281907434,
+     0.978494623655914,
+     0.8709677419354839
+    ],
+    "reference": [
+     0.99139,
+     0.99018,
+     0.97849,
+     0.87097
+    ],
+    "equal_to_5_decimals": true
+   },
+   {
+    "cond": "SC",
+    "size": 12,
+    "direction": "G1->G2",
+    "point": [
+     0.8502994011976048,
+     0.7965328467153284,
+     0.6336678832116789,
+     0.3143248175182482
+    ],
+    "reference": [
+     0.8503,
+     0.79653,
+     0.63367,
+     0.31432
+    ],
+    "equal_to_5_decimals": true
+   },
+   {
+    "cond": "SC",
+    "size": 12,
+    "direction": "G2->G1",
+    "point": [
+     0.8271782000717103,
+     0.7751285647498831,
+     0.6320710612435717,
+     0.42075736325385693
+    ],
+    "reference": [
+     0.82718,
+     0.77513,
+     0.63207,
+     0.42076
+    ],
+    "equal_to_5_decimals": true
+   },
+   {
+    "cond": "MC",
+    "size": 112,
+    "direction": "G1->G2",
+    "point": [
+     0.9993063892223556,
+     0.9989942777874111,
+     0.9974683544303797,
+     0.9865094503207907
+    ],
+    "reference": [
+     0.99931,
+     0.99899,
+     0.99747,
+     0.98651
+    ],
+    "equal_to_5_decimals": true
+   },
+   {
+    "cond": "MC",
+    "size": 112,
+    "direction": "G2->G1",
+    "point": [
+     0.9997637260403438,
+     0.9995004419167659,
+     0.9979249125773354,
+     0.9860892287591746
+    ],
+    "reference": [
+     0.99976,
+     0.9995,
+     0.99792,
+     0.98609
+    ],
+    "equal_to_5_decimals": true
+   },
+   {
+    "cond": "MC",
+    "size": 16,
+    "direction": "G1->G2",
+    "point": [
+     0.9936085219707057,
+     0.9896049896049897,
+     0.977997227997228,
+     0.9125086625086625
+    ],
+    "reference": [
+     0.99361,
+     0.9896,
+     0.978,
+     0.91251
+    ],
+    "equal_to_5_decimals": true
+   },
+   {
+    "cond": "MC",
+    "size": 16,
+    "direction": "G2->G1",
+    "point": [
+     0.995579133510168,
+     0.9938638542665388,
+     0.9829338446788112,
+     0.9248322147651007
+    ],
+    "reference": [
+     0.99558,
+     0.99386,
+     0.98293,
+     0.92483
+    ],
+    "equal_to_5_decimals": true
+   },
+   {
+    "cond": "MC",
+    "size": 12,
+    "direction": "G1->G2",
+    "point": [
+     0.8559254327563249,
+     0.8050935550935551,
+     0.6328828828828829,
+     0.35654885654885654
+    ],
+    "reference": [
+     0.85593,
+     0.80509,
+     0.63288,
+     0.35655
+    ],
+    "equal_to_5_decimals": true
+   },
+   {
+    "cond": "MC",
+    "size": 12,
+    "direction": "G2->G1",
+    "point": [
+     0.8519009725906278,
+     0.8088207094918505,
+     0.6699904122722915,
+     0.3645254074784276
+    ],
+    "reference": [
+     0.8519,
+     0.80882,
+     0.66999,
+     0.36453
+    ],
+    "equal_to_5_decimals": true
+   }
+  ]
+ },
+ "check5_caface_backbone_vs_standalone_adaface_webface4m": {
+  "n_faces": 100,
+  "cosine_min": 0.9999998807907104,
+  "cosine_median": 1.0,
+  "cosine_max": 1.000000238418579,
+  "n_above_0_9999": 100,
+  "note": "CAFace backbone (inside CAFace_AdaFaceWebFace4M.ckpt) against the standalone adaface_ir101_webface4m.ckpt through src/recognizer.py (flip off)"
+ },
+ "check4_determinism_aggregation": {
+  "first_run_dir": "outputs/video/agg7/run1",
+  "second_run_dir": "outputs/video/agg7",
+  "files": {
+   "chokepoint": {
+    "rows": [
+     84,
+     84
+    ],
+    "columns_compared": 30,
+    "identical": true
+   },
+   "predicted": {
+    "rows": [
+     120,
+     120
+    ],
+    "columns_compared": 19,
+    "identical": true
+   },
+   "curves_frames": {
+    "rows": [
+     36,
+     36
+    ],
+    "columns_compared": 8,
+    "identical": true
+   },
+   "curves_quality": {
+    "rows": [
+     24,
+     24
+    ],
+    "columns_compared": 7,
+    "identical": true
+   },
+   "chokepoint_thin_gallery": {
+    "rows": [
+     6,
+     6
+    ],
+    "columns_compared": 19,
+    "identical": true
+   },
+   "predicted_track_stats": {
+    "rows": [
+     24,
+     24
+    ],
+    "columns_compared": 10,
+    "identical": true
+   }
+  },
+  "all_identical": true,
+  "note": "the second run added the rule-minus-R1 columns (only columns present in both runs are compared)"
+ },
+ "check4_ytf_counts": {
+  "official_counts": {
+   "videos": 3425,
+   "people": 1595,
+   "pairs": 5000,
+   "folds": 10
+  },
+  "found": {
+   "n_videos_in_meta": 3425,
+   "n_people_in_meta": 1595,
+   "n_videos_with_labels": 3425,
+   "n_videos_without_labels": 0,
+   "n_people_with_labels": 1595,
+   "n_pairs": 5000,
+   "n_folds": 10,
+   "same_per_fold": [
+    250,
+    250,
+    250,
+    250,
+    250,
+    250,
+    250,
+    250,
+    250,
+    250
+   ],
+   "pairs_per_fold": [
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500,
+    500
+   ],
+   "frames_selected": 171021,
+   "videos_below_50_labelled_frames": 202,
+   "selected_frames_missing_on_disk": 0,
+   "pairs_with_a_video_without_frames": 0
+  },
+  "pairs_scored": 4986,
+  "pairs_failed": 14,
+  "videos_with_embeddings": 3417,
+  "frames_selected": 171021,
+  "frames_kept": 167622,
+  "frames_no_detection": 163,
+  "frames_no_match": 3236,
+  "frames_unreadable": 0
+ },
+ "check4_ytf_video_rerun": {
+  "video_idx": 1,
+  "arrays": {
+   "box": "identical",
+   "emb_adaface": "identical",
+   "frame_no": "identical",
+   "iou": "identical",
+   "kps": "identical",
+   "lap_var": "identical",
+   "lum": "identical",
+   "mag_norm": "identical",
+   "n_no_detection": "identical",
+   "n_no_match": "identical",
+   "n_selected": "identical",
+   "n_unreadable": "identical",
+   "score": "identical"
+  },
+  "all_identical": true
+ }
+}

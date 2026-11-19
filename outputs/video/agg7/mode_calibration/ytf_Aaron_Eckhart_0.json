@@ -1,0 +1,10 @@
+{
+ "source": "Dataset\\YouTubeFaces\\frame_images_DB\\Aaron_Eckhart\\0",
+ "frames_sampled": 85,
+ "faces": 87,
+ "face_height_px_p5": 95.03437042236328,
+ "face_height_px_p50": 98.48982238769531,
+ "face_height_px_p95": 101.84051361083985,
+ "rule": "p5 >= 32 px -> full640, else tiled",
+ "recommended_mode": "full640"
+}

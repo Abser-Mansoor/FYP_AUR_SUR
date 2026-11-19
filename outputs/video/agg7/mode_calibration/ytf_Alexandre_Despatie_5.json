@@ -1,0 +1,10 @@
+{
+ "source": "Dataset\\YouTubeFaces\\frame_images_DB\\Alexandre_Despatie\\5",
+ "frames_sampled": 63,
+ "faces": 195,
+ "face_height_px_p5": 8.495138549804688,
+ "face_height_px_p50": 47.33546447753906,
+ "face_height_px_p95": 49.26739654541016,
+ "rule": "p5 >= 32 px -> full640, else tiled",
+ "recommended_mode": "tiled"
+}

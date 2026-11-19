@@ -1,0 +1,10 @@
+{
+ "source": "Dataset\\ChokePoint\\P1E_S1_C1",
+ "frames_sampled": 109,
+ "faces": 77,
+ "face_height_px_p5": 35.046331787109374,
+ "face_height_px_p50": 88.23930358886719,
+ "face_height_px_p95": 175.3736694335938,
+ "rule": "p5 >= 32 px -> full640, else tiled",
+ "recommended_mode": "full640"
+}

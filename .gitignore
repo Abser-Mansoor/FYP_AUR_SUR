@@ -89,3 +89,13 @@ desktop.ini
 !/outputs/video/detstudy/_diag/refeval/*.log
 scripts/.venv
 outputs/video/studyC/Abser/img/
+!/outputs/video/ytf/
+/outputs/video/ytf/embed/
+/outputs/video/ytf/overlays/
+/outputs/video/ytf/list_*.txt
+/outputs/video/ytf/*.log
+/outputs/video/ytf/*.err
+!/outputs/video/agg7/
+/outputs/video/agg7/*.npz
+/outputs/video/agg7/*.err
+/outputs/video/agg7/*.cmd
