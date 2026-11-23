@@ -1,0 +1,8 @@
+{
+ "chips_processed": 3949,
+ "det_10g_sha256": "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91",
+ "detector": "SCRFD det_10g, official preprocessing, size 640",
+ "photos_processed": 316,
+ "seconds": 131.0,
+ "weights_checked_against": "MODEL_INVENTORY.md"
+}

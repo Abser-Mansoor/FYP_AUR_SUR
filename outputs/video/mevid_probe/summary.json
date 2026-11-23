@@ -1,0 +1,108 @@
+{
+ "G1_by_camera": {
+  "329": {
+   "tracklets": 10,
+   "value": 0.6
+  },
+  "330": {
+   "tracklets": 3,
+   "value": 0.0
+  },
+  "336": {
+   "tracklets": 47,
+   "value": 0.0
+  },
+  "340": {
+   "tracklets": 6,
+   "value": 0.3333333333333333
+  },
+  "436": {
+   "tracklets": 24,
+   "value": 0.041666666666666664
+  },
+  "505": {
+   "tracklets": 2,
+   "value": 0.5
+  },
+  "507": {
+   "tracklets": 55,
+   "value": 0.7636363636363637
+  },
+  "508": {
+   "tracklets": 5,
+   "value": 1.0
+  },
+  "509": {
+   "tracklets": 12,
+   "value": 0.9166666666666666
+  },
+  "639": {
+   "tracklets": 36,
+   "value": 0.3888888888888889
+  }
+ },
+ "G1_share_of_tracklets_with_at_least_5_usable_faces": {
+  "ci95": [
+   0.3385035393646409,
+   0.48806558144372786
+  ],
+  "n_tracklets": 200,
+  "threshold": 0.3,
+  "value": 0.41
+ },
+ "G2_persons_with_at_least_one_usable_tracklet": {
+  "note": "all 54 persons are enumerated; the only randomness is the tracklet sample, so no person-level CI is given",
+  "of": 54,
+  "threshold": 20,
+  "value": 44
+ },
+ "G3_test_persons_with_at_least_one_usable_checkin_photo": {
+  "of": 54,
+  "persons_without_any_photo": 0,
+  "photo_face_height_px": {
+   "p25": 43.417,
+   "p5": 31.257,
+   "p50": 55.081,
+   "p75": 63.343,
+   "p95": 74.1096
+  },
+  "photos_processed": 316,
+  "photos_with_no_face": 143,
+  "share_of_photos_usable": 0.12974683544303797,
+  "threshold": 27,
+  "value": 29
+ },
+ "criteria_pass": {
+  "G1": true,
+  "G2": true,
+  "G3": true
+ },
+ "face_height_px_of_chips_with_a_face": {
+  "n": 1489,
+  "p25": 24.695,
+  "p5": 9.8558,
+  "p50": 32.529,
+  "p75": 45.44,
+  "p95": 64.99699999999999
+ },
+ "inventory_counts_match_readme": true,
+ "n_chips_sampled": 3949,
+ "n_tracklets_sampled": 200,
+ "n_unreadable_chips": 0,
+ "rule": "G1 >= 30% of tracklets with >= 5 usable faces of 20; G2 >= 20 of 54 persons with a usable tracklet; G3 >= 27 of 54 test persons with a usable check-in photo (fixed in the plan)",
+ "share_chips_with_a_face": {
+  "ci95": [
+   0.31832000231456753,
+   0.44231694707711483
+  ],
+  "value": 0.3770574829070651
+ },
+ "share_chips_with_a_usable_face": {
+  "ci95": [
+   0.2716948553254605,
+   0.40155327239136485
+  ],
+  "value": 0.33274246644720185
+ },
+ "verdict": "GO (high-resolution gallery route)"
+}
