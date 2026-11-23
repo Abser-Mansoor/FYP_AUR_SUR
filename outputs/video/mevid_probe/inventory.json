@@ -1,0 +1,90 @@
+{
+ "cameras": 11,
+ "checkin": {
+  "files": 2898,
+  "image_height": {
+   "p25": 1466.25,
+   "p5": 406.0,
+   "p50": 1844.5,
+   "p75": 2130.75,
+   "p95": 2598.3
+  },
+  "image_width": {
+   "p25": 544.0,
+   "p5": 143.85,
+   "p50": 720.0,
+   "p75": 856.0,
+   "p95": 1103.4500000000003
+  },
+  "mapping_evidence": {
+   "persons_in_train_plus_test": 158,
+   "test_persons": 54,
+   "test_persons_that_occur_as_a_photo_prefix": 54,
+   "train_persons": 104,
+   "train_persons_that_occur_as_a_photo_prefix": 104
+  },
+  "mapping_rule": "person ID = integer value of the 3-digit file-name prefix (found by naming convention)",
+  "persons_with_photos": 172,
+  "photos_of_test_persons": 316,
+  "photos_per_person": {
+   "p0": 2.0,
+   "p100": 42.0,
+   "p25": 6.0,
+   "p50": 18.0,
+   "p75": 26.0
+  },
+  "test_persons_with_at_least_one_front_photo": 54,
+  "test_persons_with_at_least_one_photo": 54,
+  "unparsed_file_names": [],
+  "view_counts": {
+   "b": 1444,
+   "f": 1454
+  }
+ },
+ "chip_files_on_disk": 1186251,
+ "chip_files_on_disk_equal_test_name_txt": true,
+ "chip_size_sample": {
+  "height": {
+   "p25": 88.0,
+   "p5": 76.0,
+   "p50": 168.0,
+   "p75": 272.0,
+   "p95": 461.04999999999995
+  },
+  "n": 2000,
+  "unreadable_or_missing": 0,
+  "width": {
+   "p25": 35.0,
+   "p5": 26.0,
+   "p50": 95.0,
+   "p75": 152.0,
+   "p95": 230.0
+  }
+ },
+ "chips_per_tracklet": {
+  "max": 1000,
+  "mean": 676.311858608894,
+  "min": 1,
+  "p25": 312.25,
+  "p5": 50.30000000000001,
+  "p50": 880.0,
+  "p75": 1000.0,
+  "p95": 1000.0
+ },
+ "chips_total_in_test_name_txt": 1186251,
+ "counts_match_readme": true,
+ "found_counts": {
+  "identities": 54,
+  "outfits": 113,
+  "tracklets": 1754
+ },
+ "gallery_tracklets": 1438,
+ "query_tracklets": 316,
+ "readme_counts": {
+  "identities": 54,
+  "outfits": 113,
+  "tracklets": 1754
+ },
+ "tracklet_endpoints_whose_chip_name_disagrees_with_the_info_row": 0,
+ "tracklet_ranges_contiguous_and_cover_test_name_txt": true
+}

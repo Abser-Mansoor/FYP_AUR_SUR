@@ -99,3 +99,8 @@ outputs/video/studyC/Abser/img/
 /outputs/video/agg7/*.npz
 /outputs/video/agg7/*.err
 /outputs/video/agg7/*.cmd
+!/outputs/video/mevid_probe/
+/outputs/video/mevid_probe/overlays/
+/outputs/video/mevid_probe/*.log
+/outputs/video/mevid_probe/*.err
+/outputs/video/mevid_probe/*.cmd
