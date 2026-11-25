@@ -1,0 +1,27 @@
+{
+ "checkin_persons": 172,
+ "checkin_photos": 2898,
+ "checkin_photos_equal_probe_inventory": true,
+ "empty_tracklets": [
+  {
+   "end": 1128476,
+   "person": 78,
+   "start": 1128477,
+   "tracklet": "tr01889"
+  }
+ ],
+ "persons_equal_readme": true,
+ "persons_test": 54,
+ "persons_total": 158,
+ "persons_train": 104,
+ "readme_counts": {
+  "identities": 158,
+  "tracklets": 8092
+ },
+ "tracklets_equal_readme": false,
+ "tracklets_test": 1754,
+ "tracklets_total": 8093,
+ "tracklets_train": 6339,
+ "tracklets_with_at_least_one_chip": 8092,
+ "tracklets_with_chips_equal_readme": true
+}

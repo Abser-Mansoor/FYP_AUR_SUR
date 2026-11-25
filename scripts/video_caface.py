@@ -187,6 +187,45 @@ def embed_ytf(a):
             print(f"[{k}/{len(files)}] video {v}", flush=True)
 
 
+def embed_mevid(a):
+    """Phase 8 Part A item 3 (WebFace4M rows): the CAFace backbone on the same aligned faces as the AdaFace embedding of scripts/mevid_embed.py (usable faces of the eligible tracklets, same order),
+    and on the gallery faces. Writes outputs/video/mevid/emb/cf_<tracklet>.npz (feat, norm) and gallery_cf.npz. Run only after section 0 of REPORT_phase8.md is committed."""
+    import cv2
+    import pandas as pd
+    from mevid_embed import OUT as MOUT, PHOTOS, chip_path, load_names
+    from src.align import norm_crop
+    agg, model, hp = load_caface()
+    tr = pd.read_csv(MOUT / "tracklets.csv")
+    tr = tr[tr.detected.fillna(False).astype(bool) & tr.eligible.fillna(False).astype(bool)].reset_index(drop=True)
+    if a.limit:
+        tr = tr.head(a.limit)
+    names = {s: load_names(s) for s in ("train", "test")}
+    for n, r in enumerate(tr.itertuples(), 1):
+        f = MOUT / "emb" / f"cf_{r.tracklet}.npz"
+        if f.exists():
+            continue
+        z = np.load(MOUT / "emb" / f"det_{r.tracklet}.npz")
+        sel = np.flatnonzero(z["usable"])
+        crops = [norm_crop(cv2.imread(str(chip_path(r.split, names[r.split][int(z["chip_idx"][q])]))), z["kps"][q]) for q in sel]
+        feat, norm, _ = embed(crops, model, agg, hp)
+        tmp = f.with_name(f.name + ".tmp")
+        with open(tmp, "wb") as fh:
+            np.savez(fh, feat=feat, norm=norm)
+        tmp.replace(f)
+        if n % 500 == 0:
+            print(f"[{n}/{len(tr)}] {r.tracklet}", flush=True)
+    g = np.load(MOUT / "gallery.npz", allow_pickle=True)
+    gf = pd.read_csv(MOUT / "gallery_faces.csv").set_index("file")
+    crops = []
+    for fn in g["photo"]:
+        r = gf.loc[fn]
+        kp = np.array([[r[f"kp{q}_x"], r[f"kp{q}_y"]] for q in range(5)], np.float32)
+        crops.append(norm_crop(cv2.imread(str(PHOTOS / fn)), kp))
+    feat, norm, _ = embed(crops, model, agg, hp)
+    np.savez(MOUT / "gallery_cf.npz", photo=g["photo"], person=g["person"], face_h=g["face_h"], feat=feat, norm=norm)
+    print("mevid CAFace embedding done", flush=True)
+
+
 def check5_features(a):
     """Acceptance check 5, step 1 (envs/caface): 100 seeded matched ChokePoint faces; the aligned crops and the CAFace backbone features are saved."""
     import cv2
@@ -227,13 +266,13 @@ def check5_compare(a):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--selftest", action="store_true")
-    ap.add_argument("--part", choices=["chokepoint", "ytf", "check5", "check5-ref"], default=None)
+    ap.add_argument("--part", choices=["chokepoint", "ytf", "check5", "check5-ref", "mevid"], default=None)
     ap.add_argument("--limit", type=int, default=None, help="only the first N clips or videos (smoke test)")
     ap.add_argument("--clips", nargs="+", default=None, help="ChokePoint: only these clips")
     a = ap.parse_args()
     if a.selftest:
         selftest(a)
     elif a.part:
-        {"chokepoint": embed_chokepoint, "ytf": embed_ytf, "check5": check5_features, "check5-ref": check5_compare}[a.part](a)
+        {"chokepoint": embed_chokepoint, "ytf": embed_ytf, "check5": check5_features, "check5-ref": check5_compare, "mevid": embed_mevid}[a.part](a)
     else:
         sys.exit("use --selftest or --part chokepoint|ytf")

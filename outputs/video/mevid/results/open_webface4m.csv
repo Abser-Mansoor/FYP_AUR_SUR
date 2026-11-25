@@ -1,0 +1,37 @@
+setting,metric,fpir,probe,value,ci_lo,ci_hi
+"webface4m, gallery bar 48 px",TPIR1,0.30000,single frame,0.53067,0.50451,0.55665
+"webface4m, gallery bar 48 px",TPIR1,0.30000,R1 tracklet,0.62268,0.60201,0.64588
+"webface4m, gallery bar 48 px",TPIR1,0.30000,R1 minus single frame,0.09201,0.06065,0.12620
+"webface4m, gallery bar 48 px",TPIR1,0.10000,single frame,0.45564,0.38727,0.48796
+"webface4m, gallery bar 48 px",TPIR1,0.10000,R1 tracklet,0.54303,0.47515,0.57540
+"webface4m, gallery bar 48 px",TPIR1,0.10000,R1 minus single frame,0.08739,0.01614,0.16092
+"webface4m, gallery bar 48 px",TPIR1,0.01000,single frame,0.15598,0.12098,0.23099
+"webface4m, gallery bar 48 px",TPIR1,0.01000,R1 tracklet,0.19872,0.17367,0.30873
+"webface4m, gallery bar 48 px",TPIR1,0.01000,R1 minus single frame,0.04274,-0.02494,0.15720
+"webface4m, gallery bar 48 px",TPIR20,0.30000,single frame,0.55786,0.53362,0.58216
+"webface4m, gallery bar 48 px",TPIR20,0.30000,R1 tracklet,0.65323,0.63360,0.67350
+"webface4m, gallery bar 48 px",TPIR20,0.30000,R1 minus single frame,0.09537,0.06604,0.12919
+"webface4m, gallery bar 48 px",TPIR20,0.10000,single frame,0.46959,0.40211,0.50145
+"webface4m, gallery bar 48 px",TPIR20,0.10000,R1 tracklet,0.56105,0.48709,0.59215
+"webface4m, gallery bar 48 px",TPIR20,0.10000,R1 minus single frame,0.09145,0.01475,0.16243
+"webface4m, gallery bar 48 px",TPIR20,0.01000,single frame,0.16012,0.12368,0.23479
+"webface4m, gallery bar 48 px",TPIR20,0.01000,R1 tracklet,0.19456,0.16062,0.29268
+"webface4m, gallery bar 48 px",TPIR20,0.01000,R1 minus single frame,0.03444,-0.03689,0.14094
+"webface4m, gallery bar 64 px",TPIR1,0.30000,single frame,0.52089,0.49305,0.54365
+"webface4m, gallery bar 64 px",TPIR1,0.30000,R1 tracklet,0.62313,0.59848,0.64358
+"webface4m, gallery bar 64 px",TPIR1,0.30000,R1 minus single frame,0.10224,0.06816,0.13546
+"webface4m, gallery bar 64 px",TPIR1,0.10000,single frame,0.44418,0.38250,0.47291
+"webface4m, gallery bar 64 px",TPIR1,0.10000,R1 tracklet,0.54116,0.46542,0.57371
+"webface4m, gallery bar 64 px",TPIR1,0.10000,R1 minus single frame,0.09698,0.02035,0.16116
+"webface4m, gallery bar 64 px",TPIR1,0.01000,single frame,0.13107,0.10456,0.21822
+"webface4m, gallery bar 64 px",TPIR1,0.01000,R1 tracklet,0.18586,0.15181,0.30514
+"webface4m, gallery bar 64 px",TPIR1,0.01000,R1 minus single frame,0.05479,-0.02954,0.15706
+"webface4m, gallery bar 64 px",TPIR20,0.30000,single frame,0.54703,0.52132,0.56955
+"webface4m, gallery bar 64 px",TPIR20,0.30000,R1 tracklet,0.65058,0.62684,0.67021
+"webface4m, gallery bar 64 px",TPIR20,0.30000,R1 minus single frame,0.10354,0.07014,0.13429
+"webface4m, gallery bar 64 px",TPIR20,0.10000,single frame,0.45811,0.39612,0.48670
+"webface4m, gallery bar 64 px",TPIR20,0.10000,R1 tracklet,0.55404,0.47569,0.58954
+"webface4m, gallery bar 64 px",TPIR20,0.10000,R1 minus single frame,0.09594,0.01696,0.16065
+"webface4m, gallery bar 64 px",TPIR20,0.01000,single frame,0.13489,0.10890,0.22300
+"webface4m, gallery bar 64 px",TPIR20,0.01000,R1 tracklet,0.18473,0.13885,0.28362
+"webface4m, gallery bar 64 px",TPIR20,0.01000,R1 minus single frame,0.04984,-0.05061,0.13761

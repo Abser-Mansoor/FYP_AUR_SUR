@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / "Dataset/MEVID/archives"
 BASE = "https://mevadata-public-01.s3.amazonaws.com/mevid-annotations/"
-FILES = ["mevid-v1-annotation-data.zip", "mevid-v1-actor-checkin-photos.zip", "mevid-v1-bbox-test.tgz"]
+FILES = ["mevid-v1-annotation-data.zip", "mevid-v1-actor-checkin-photos.zip", "mevid-v1-bbox-test.tgz", "mevid-v1-bbox-train.tgz"]  # train added for Phase 8 (all 158 identities)
 CHUNK, WORKERS = 128 * 1024 * 1024, 32
 CURL = "curl.exe" if sys.platform == "win32" else "curl"
 

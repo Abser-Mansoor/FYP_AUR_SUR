@@ -1,0 +1,7 @@
+dataset,signal,n_tracklets,n_persons,overall_error,auc,auc_random,auc_minus_random,ci_lo,ci_hi,bonf_lo,bonf_hi,exploratory,helps
+"ChokePoint 12 px (SC, GT tracks, both directions pooled)",n_usable_faces,432,29,0.06713,0.02808,0.03356,-0.00548,-0.01617,0.00372,-0.01989,0.00554,False,False
+"ChokePoint 12 px (SC, GT tracks, both directions pooled)",self_consistency,432,29,0.06713,0.03515,0.03356,0.00158,-0.00739,0.00932,-0.00932,0.01140,False,False
+"ChokePoint 12 px (SC, GT tracks, both directions pooled)",mean_magface_norm,432,29,0.06713,0.03577,0.03356,0.00220,-0.00866,0.01202,-0.01086,0.01351,False,False
+"ChokePoint 16 px (SC, GT tracks, both directions pooled)",n_usable_faces,432,29,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,False,False
+"ChokePoint 16 px (SC, GT tracks, both directions pooled)",self_consistency,432,29,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,False,False
+"ChokePoint 16 px (SC, GT tracks, both directions pooled)",mean_magface_norm,432,29,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,0.00000,False,False

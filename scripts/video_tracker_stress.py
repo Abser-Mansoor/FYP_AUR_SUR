@@ -34,7 +34,7 @@ KEYS = ["IDF1", "HOTA", "AssA", "DetA", "IDSW"]
 SEED, N_BOOT = 42, 1000
 
 
-def run_clip(clip, ci, gt, cfg, trackers=None, params=None):
+def run_clip(clip, ci, gt, cfg, trackers=None, params=None, lam=0.0, embs=None, assign_out=None):
     z = np.load(PIPE / clip / "detections.npz")
     frames, fi, dets, shape = z["frames"].astype(int), z["frame_idx"].astype(int), z["dets"], tuple(int(x) for x in z["shape"])
     starts, ends = np.searchsorted(fi, frames, side="left"), np.searchsorted(fi, frames, side="right")
@@ -46,17 +46,22 @@ def run_clip(clip, ci, gt, cfg, trackers=None, params=None):
             keep = np.random.default_rng([SEED, ci, int(round(100 * p))]).random(len(dets)) >= p
         sel = np.arange(0, len(frames), k)
         for tname in (trackers or TRACKERS):
-            tr = TrackerAdapter(tname, cfg["tracking"]["frame_rate"] / k, params=params if tname == "botsort" else None, match_iou=cfg["tracking"]["match_iou"])
+            tr = TrackerAdapter(tname, cfg["tracking"]["frame_rate"] / k, params=params if tname == "botsort" else None, match_iou=cfg["tracking"]["match_iou"], lam=lam)
             pred, ids_seen = {}, set()
+            assign = np.full(len(dets), -1, np.int32) if assign_out is not None else None  # track id of every detection row (-1: dropped, frame not kept, or no track)
             for j in sel:
                 s, e = starts[j], ends[j]
                 m = keep[s:e]
                 d = dets[s:e][m]
-                tid = tr.update(d, shape)
+                tid = tr.update(d, shape, embs=embs[s:e][m] if embs is not None else None)
+                if assign is not None:
+                    assign[np.arange(s, e)[m]] = tid
                 ok = tid >= 0
                 if ok.any():
                     pred[int(frames[j])] = (tid[ok], d[ok, :4])
                     ids_seen.update(tid[ok].tolist())
+            if assign_out is not None:
+                assign_out[f"{cname}|{tname}"] = assign
             res = M.clip_metrics(gt[clip], pred, [int(frames[j]) for j in sel])
             rows.append(dict(clip=clip, cond=cname, tracker=tname, n_frames=len(sel), n_tracks=len(ids_seen), **{kk: res[kk] for kk in KEYS}))
     return rows
@@ -139,8 +144,44 @@ def exploratory(prox):
     print(pd.DataFrame(srows).round(4).to_string(index=False))
 
 
+def face_embs(clip, n_dets):
+    """AdaFace embeddings aligned to the clip's detection rows (NaN where a detection has none, i.e. score < 0.5)."""
+    z = np.load(PIPE / clip / "embed.npz")
+    e = np.full((n_dets, 512), np.nan, np.float32)
+    e[z["det_id"]] = z["emb_adaface"]
+    return e
+
+
+def face_term(lam):
+    """Phase 8 Part D: the six conditions with the face term of weight `lam` (0 = the Phase 7 behaviour; acceptance check 5 compares this run with the Phase 7 per_clip.csv).
+    Outputs outputs/video/mevid/tracker_face/lam<lam>/{per_clip.csv, summary.csv}."""
+    cfg = yaml.safe_load(open(ROOT / "configs/video.yaml"))
+    gt = load_gt()
+    out = ROOT / "outputs/video/mevid/tracker_face" / f"lam{lam:g}"
+    out.mkdir(parents=True, exist_ok=True)
+    cache = out / "per_clip.csv"
+    rows = [pd.read_csv(cache)] if cache.exists() else []
+    have = set(rows[0].clip.unique()) if rows else set()
+    for ci, clip in enumerate(sorted(gt)):
+        if clip in have:
+            continue
+        n = len(np.load(PIPE / clip / "detections.npz")["dets"])
+        asg = {}
+        rows.append(pd.DataFrame(run_clip(clip, ci, gt, cfg, lam=lam, embs=face_embs(clip, n) if lam > 0 else None, assign_out=asg)))
+        (out / "tracks").mkdir(exist_ok=True)
+        np.savez(out / "tracks" / f"{clip}.npz", **asg)
+        pd.concat(rows, ignore_index=True).to_csv(cache, index=False, float_format="%.6f")
+        print(f"[{ci + 1}/72] {clip}", flush=True)
+    d = pd.read_csv(cache)
+    g = d.groupby(["cond", "tracker"])[KEYS + ["n_tracks"]].agg({**{k: "mean" for k in KEYS}, "n_tracks": "sum"}).reset_index()
+    g.to_csv(out / "summary.csv", index=False, float_format="%.5f")
+    print(g.round(4).to_string(index=False))
+
+
 if __name__ == "__main__":
     if len(sys.argv) == 3 and sys.argv[1] == "--exploratory-botsort-proximity":
         exploratory(float(sys.argv[2]))
+    elif len(sys.argv) == 3 and sys.argv[1] == "--lam":
+        face_term(float(sys.argv[2]))
     else:
         main()

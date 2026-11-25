@@ -1,0 +1,32 @@
+{
+ "decision": "bytetrack (default)",
+ "decision_rule": "the tracker with the higher mean track-identity accuracy over S0-S5 with the face term (lam 0.5) wins if the CI of the per-clip difference excludes zero; otherwise ByteTrack stays the default",
+ "lam0": {
+  "ci95": [
+   -0.05755189522438963,
+   -0.02099257236885306
+  ],
+  "ci_excludes_zero": true,
+  "mean_accuracy": {
+   "botsort": 0.9039359456873773,
+   "bytetrack": 0.8659645242846704
+  },
+  "mean_diff_bytetrack_minus_botsort": -0.037971421402706894,
+  "n_clips": 24,
+  "winner": "botsort"
+ },
+ "lam0.5": {
+  "ci95": [
+   -0.010646831901317402,
+   0.00015859947379190707
+  ],
+  "ci_excludes_zero": false,
+  "mean_accuracy": {
+   "botsort": 0.8843094048273811,
+   "bytetrack": 0.88067643005143
+  },
+  "mean_diff_bytetrack_minus_botsort": -0.0036329747759510822,
+  "n_clips": 24,
+  "winner": "bytetrack (default)"
+ }
+}

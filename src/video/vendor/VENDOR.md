@@ -62,3 +62,11 @@ ffce9a3ed557f164f7a811f0a8cf66f609eec0af822dbc87d8fdaef560032163  trackeval/metr
 c082ecfbb5061619642b82a034454022806f8e870f774e54dbfbdacaaf097132  trackeval/utils.py
 62e60638efc675bccc35c7da65158f0f19ce31f332121efe7cc748bd92ad2b30  trackeval/_timing.py
 ```
+
+## Phase 8 patch: face-embedding cost hook (ByteTrack and BoT-SORT)
+Added 2026-11-25 for the Phase 8 face-aware association test (`REPORT_phase8.md` section 0.6). Both vendored trackers get the same minimal change; with the hook off (`det_embs` and `face_hook` unset, the default) the code path and results are unchanged (acceptance check 5: lambda = 0 reproduces the Phase 7 per-clip tracker results byte for byte, `outputs/video/mevid/checks.json`).
+- `STrack.__init__` takes an optional `emb` (default `None`) and keeps it as `self.emb`; `STrack.update` and `STrack.re_activate` copy `new_track.emb` to the track when it is not `None` (the track keeps the embedding of its latest gated-in matched detection).
+- In `update()` the detections are built with `emb=` taken from `self.det_embs[remain_inds]` when the attribute `det_embs` is set (an object array with one embedding or `None` per input row), otherwise `None`.
+- After the first association cost and after the unconfirmed-track cost (not after the second association), `dists = self.face_hook(tracks, detections, dists)` is applied when `face_hook` is set. The hook itself lives in `src/video/track.py:TrackerAdapter._face_hook`: `(1 - lambda) * dist + lambda * (1 - cos)` for a pair whose faces are both gated in.
+- Files: `bytetrack/byte_tracker.py` and `botsort/bot_sort.py`; no other vendored file changed.
+

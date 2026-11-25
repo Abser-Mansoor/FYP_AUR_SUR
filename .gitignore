@@ -104,3 +104,9 @@ outputs/video/studyC/Abser/img/
 /outputs/video/mevid_probe/*.log
 /outputs/video/mevid_probe/*.err
 /outputs/video/mevid_probe/*.cmd
+!/outputs/video/mevid/
+/outputs/video/mevid/emb/
+/outputs/video/mevid/*.npz
+/outputs/video/mevid/*.log
+/outputs/video/mevid/*.err
+/outputs/video/mevid/*.cmd

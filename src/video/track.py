@@ -36,9 +36,13 @@ def iou_matrix(a, b):
 
 
 class TrackerAdapter:
-    def __init__(self, name, frame_rate=30, params=None, match_iou=0.3):
+    def __init__(self, name, frame_rate=30, params=None, match_iou=0.3, lam=0.0, min_h=32.0):
+        """lam > 0 adds the Phase 8 face term to the association cost of both trackers (REPORT_phase8.md section 0.6):
+        cost = (1 - lam) * (tracker's own IoU distance) + lam * (1 - cos) for a track-detection pair whose faces are both gated in
+        (detector score >= 0.5, an embedding supplied, native box height >= min_h). lam = 0 (default) leaves the vendored trackers' behaviour unchanged."""
         assert name in DEFAULTS, name
         self.name, self.match_iou = name, match_iou
+        self.lam, self.min_h = float(lam), float(min_h)
         p = {**DEFAULTS[name], **(params or {})}
         if name == "bytetrack":
             BTBase._count = 0
@@ -46,10 +50,32 @@ class TrackerAdapter:
         else:
             BSBase._count = 0
             self.t = BoTSORT(Namespace(**p), frame_rate=frame_rate)
+        if self.lam > 0:
+            self.t.face_hook = self._face_hook
 
-    def update(self, dets, hw, frame=None):
-        """dets [N,5] float. hw = (H, W). Returns int array [N]: the track id of each detection, -1 if none."""
+    def _face_hook(self, tracks, dets, dists):
+        out = np.array(dists, dtype=float, copy=True)
+        for i, t in enumerate(tracks):
+            if getattr(t, "emb", None) is None:
+                continue
+            for j, d in enumerate(dets):
+                if getattr(d, "emb", None) is None:
+                    continue
+                out[i, j] = (1.0 - self.lam) * dists[i, j] + self.lam * (1.0 - float(np.dot(t.emb, d.emb)))
+        return out
+
+    def update(self, dets, hw, frame=None, embs=None):
+        """dets [N,5] float. hw = (H, W). embs [N,512] L2-normalised face embeddings (NaN row = none), used only when lam > 0.
+        Returns int array [N]: the track id of each detection, -1 if none."""
         dets = np.asarray(dets, np.float64).reshape(-1, 5)
+        if self.lam > 0 and embs is not None and len(dets):
+            gate = (dets[:, 4] >= 0.5) & ((dets[:, 3] - dets[:, 1]) >= self.min_h) & np.isfinite(np.asarray(embs)).all(1)
+            arr = np.empty(len(dets), dtype=object)
+            for i in range(len(dets)):
+                arr[i] = np.asarray(embs[i], np.float64) if gate[i] else None
+            self.t.det_embs = arr
+        else:
+            self.t.det_embs = None
         H, W = hw
         if self.name == "bytetrack":
             tracks = self.t.update(dets.copy(), (H, W), (H, W))

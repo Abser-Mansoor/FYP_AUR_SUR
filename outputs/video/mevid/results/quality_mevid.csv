@@ -1,0 +1,9 @@
+dataset,signal,n_tracklets,n_persons,overall_error,auc,auc_random,auc_minus_random,ci_lo,ci_hi,bonf_lo,bonf_hi,exploratory,helps
+MEVID (gallery bar 48 px),n_usable_faces,3188,151,0.50533,0.21304,0.25267,-0.03963,-0.04524,-0.03349,-0.04776,-0.03128,False,True
+MEVID (gallery bar 48 px),self_consistency,3188,151,0.50533,0.24442,0.25267,-0.00825,-0.01449,-0.00217,-0.01598,-0.00019,False,True
+MEVID (gallery bar 48 px),mean_face_height,3188,151,0.50533,0.20519,0.25267,-0.04748,-0.05380,-0.04014,-0.05634,-0.03708,False,True
+MEVID (gallery bar 48 px),mean_laplacian_variance,3188,151,0.50533,0.21917,0.25267,-0.03350,-0.03996,-0.02685,-0.04178,-0.02454,False,True
+MEVID (gallery bar 48 px),mean_luminance,3188,151,0.50533,0.25208,0.25267,-0.00059,-0.00894,0.00773,-0.01158,0.01101,False,False
+MEVID (gallery bar 48 px),mean_adaface_raw_norm,3188,151,0.50533,0.23600,0.25267,-0.01666,-0.02486,-0.00708,-0.02789,-0.00407,False,True
+MEVID (gallery bar 48 px),mean_magface_norm,3188,151,0.50533,0.20493,0.25267,-0.04774,-0.05442,-0.04172,-0.05697,-0.03910,False,True
+MEVID (gallery bar 48 px),luminance_closeness_to_midgray,3188,151,0.50533,0.25201,0.25267,-0.00066,-0.00900,0.00778,-0.01160,0.01101,True,

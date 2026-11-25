@@ -10,7 +10,7 @@ from .basetrack import BaseTrack, TrackState
 
 class STrack(BaseTrack):
     shared_kalman = KalmanFilter()
-    def __init__(self, tlwh, score):
+    def __init__(self, tlwh, score, emb=None):
 
         # wait activate
         self._tlwh = np.asarray(tlwh, dtype=float)
@@ -20,6 +20,7 @@ class STrack(BaseTrack):
 
         self.score = score
         self.tracklet_len = 0
+        self.emb = emb  # Phase 8: face embedding of the latest gated-in matched detection (None when unused)
 
     def predict(self):
         mean_state = self.mean.copy()
@@ -65,6 +66,8 @@ class STrack(BaseTrack):
         if new_id:
             self.track_id = self.next_id()
         self.score = new_track.score
+        if new_track.emb is not None:  # Phase 8: latest gated-in face embedding
+            self.emb = new_track.emb
 
     def update(self, new_track, frame_id):
         """
@@ -84,6 +87,8 @@ class STrack(BaseTrack):
         self.is_activated = True
 
         self.score = new_track.score
+        if new_track.emb is not None:  # Phase 8: latest gated-in face embedding
+            self.emb = new_track.emb
 
     @property
     # @jit(nopython=True)
@@ -184,8 +189,9 @@ class BYTETracker(object):
 
         if len(dets) > 0:
             '''Detections'''
-            detections = [STrack(STrack.tlbr_to_tlwh(tlbr), s) for
-                          (tlbr, s) in zip(dets, scores_keep)]
+            embs_keep = self.det_embs[remain_inds] if getattr(self, "det_embs", None) is not None else [None] * len(dets)
+            detections = [STrack(STrack.tlbr_to_tlwh(tlbr), s, emb=e) for
+                          (tlbr, s, e) in zip(dets, scores_keep, embs_keep)]
         else:
             detections = []
 
@@ -205,6 +211,8 @@ class BYTETracker(object):
         dists = matching.iou_distance(strack_pool, detections)
         if not self.args.mot20:
             dists = matching.fuse_score(dists, detections)
+        if getattr(self, "face_hook", None):  # Phase 8 hook
+            dists = self.face_hook(strack_pool, detections, dists)
         matches, u_track, u_detection = matching.linear_assignment(dists, thresh=self.args.match_thresh)
 
         for itracked, idet in matches:
@@ -249,6 +257,8 @@ class BYTETracker(object):
         dists = matching.iou_distance(unconfirmed, detections)
         if not self.args.mot20:
             dists = matching.fuse_score(dists, detections)
+        if getattr(self, "face_hook", None):  # Phase 8 hook
+            dists = self.face_hook(unconfirmed, detections, dists)
         matches, u_unconfirmed, u_detection = matching.linear_assignment(dists, thresh=0.7)
         for itracked, idet in matches:
             unconfirmed[itracked].update(detections[idet], self.frame_id)

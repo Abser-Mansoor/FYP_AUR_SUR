@@ -1,0 +1,87 @@
+{
+ "check1_counts": {
+  "all_pass_when_the_empty_row_is_excluded": true,
+  "checkin_equal_probe_inventory": true,
+  "checkin_persons": 172,
+  "checkin_photos": 2898,
+  "empty_tracklets": [
+   {
+    "end": 1128476,
+    "person": 78,
+    "start": 1128477,
+    "tracklet": "tr01889"
+   }
+  ],
+  "persons": 158,
+  "persons_equal_readme": true,
+  "readme_tracklets": 8092,
+  "tracklet_rows": 8093,
+  "tracklets_with_chips": 8092,
+  "tracklets_with_chips_equal_readme": true
+ },
+ "check2_probe_boxes_reproduced": {
+  "chips": 3949,
+  "faces_here": 1489,
+  "faces_in_probe": 1489,
+  "identical": true,
+  "max_abs_difference_in_box_or_score_after_rounding_to_3_decimals": 0.0,
+  "same_face_flag_for_every_chip": true,
+  "seconds": 118.2
+ },
+ "check3_aggregation_rules_on_real_tracklet": {
+  "frame_order_invariance": true,
+  "length1_equals_single_frame": true
+ },
+ "check4_open_set_folds": {
+  "each_person_held_out_exactly_once": true,
+  "folds": 5,
+  "gallery_and_nonenrolled_disjoint": true,
+  "persons_in_population": 151
+ },
+ "check5_lambda0_reproduces_phase7_tracker_results": {
+  "byte_identical": true,
+  "lambda0_per_clip_sha256": "5097c822846692c8476c9dca7551d0e1428c4585fe900725178dc5ca48f2ad3a",
+  "phase7_per_clip_sha256": "5097c822846692c8476c9dca7551d0e1428c4585fe900725178dc5ca48f2ad3a",
+  "rows_lambda0": 864,
+  "rows_phase7": 864
+ },
+ "check6_cpu_parts_rerun_identical": {
+  "byte_identical": [
+   "backbone_pair",
+   "camera_*",
+   "closed_records_* (4)",
+   "closed_webface4m",
+   "enrolment_*",
+   "folds_*",
+   "height_*",
+   "no_photo_*",
+   "open_adaface",
+   "open_webface4m",
+   "quality_mevid(+curves)",
+   "quality_chokepoint(+curves)",
+   "tracker_identity_per_clip",
+   "tracker_face/lam0.5/per_clip.csv",
+   "tracker_face/lam0.5/tracks/*"
+  ],
+  "not_byte_identical_explained": {
+   "closed_adaface_csv": "first-run copy was taken before the Bonferroni minus-R1 columns were added; all shared columns equal (max abs difference 0.0)",
+   "tracker_identity_summary_and_decision_json": "first run summarised from the 5-decimal CSV, rerun from unrounded values; per-clip inputs byte identical; differences at most 2e-7 (e.g. -0.01506 vs -0.01505 in one rounded cell); decision unchanged"
+  },
+  "verdict": "pass"
+ },
+ "check6_partB_adaface_rerun_identical": {
+  "all_identical": true,
+  "files": {
+   "camera_adaface.csv": true,
+   "closed_adaface.csv": true,
+   "closed_records_adaface_bar48.csv": true,
+   "closed_records_adaface_bar64.csv": true,
+   "enrolment_adaface.csv": true,
+   "folds_adaface.csv": true,
+   "height_adaface.csv": true,
+   "no_photo_adaface.csv": true,
+   "open_adaface.csv": true
+  },
+  "note": "the second run added the Bonferroni columns for rule-minus-R1; only columns present in both runs are compared"
+ }
+}

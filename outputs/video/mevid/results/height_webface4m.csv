@@ -1,0 +1,5 @@
+setting,rule,n_tracklets,n_persons,single_rank1,agg_rank1,delta,delta_ci_lo,delta_ci_hi,delta_bonf_lo,delta_bonf_hi,model
+"mean face height [16, 24) px",R1,928,138,0.23039,0.42349,0.19310,0.16176,0.22416,0.16176,0.22416,webface4m
+"mean face height [24, 32) px",R1,550,121,0.46456,0.67636,0.21180,0.18016,0.24432,0.18016,0.24432,webface4m
+"mean face height [32, 48) px",R1,867,139,0.60374,0.80046,0.19672,0.17206,0.22599,0.17206,0.22599,webface4m
+"mean face height [48, 1000000) px",R1,843,134,0.64737,0.82088,0.17351,0.14967,0.20105,0.14967,0.20105,webface4m
