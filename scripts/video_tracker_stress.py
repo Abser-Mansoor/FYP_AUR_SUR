@@ -144,20 +144,22 @@ def exploratory(prox):
     print(pd.DataFrame(srows).round(4).to_string(index=False))
 
 
-def face_embs(clip, n_dets):
-    """AdaFace embeddings aligned to the clip's detection rows (NaN where a detection has none, i.e. score < 0.5)."""
-    z = np.load(PIPE / clip / "embed.npz")
+def face_embs(clip, n_dets, backbone="adaface"):
+    """Face embeddings aligned to the clip's detection rows (NaN where a detection has none, i.e. score < 0.5).
+    backbone "adaface" = MS1MV2 (embed.npz, Phase 8); "webface4m" = the Phase 9 backbone (embed_webface4m.npz, same det_id rows)."""
+    f, k = ("embed.npz", "emb_adaface") if backbone == "adaface" else ("embed_webface4m.npz", "emb_adaface_wf4m")
+    z = np.load(PIPE / clip / f)
     e = np.full((n_dets, 512), np.nan, np.float32)
-    e[z["det_id"]] = z["emb_adaface"]
+    e[z["det_id"]] = z[k]
     return e
 
 
-def face_term(lam):
+def face_term(lam, backbone="adaface"):
     """Phase 8 Part D: the six conditions with the face term of weight `lam` (0 = the Phase 7 behaviour; acceptance check 5 compares this run with the Phase 7 per_clip.csv).
     Outputs outputs/video/mevid/tracker_face/lam<lam>/{per_clip.csv, summary.csv}."""
     cfg = yaml.safe_load(open(ROOT / "configs/video.yaml"))
     gt = load_gt()
-    out = ROOT / "outputs/video/mevid/tracker_face" / f"lam{lam:g}"
+    out = ROOT / "outputs/video/mevid/tracker_face" / f"lam{lam:g}" if backbone == "adaface" else ROOT / "outputs/video/phase9/tracker_face" / f"lam{lam:g}_{backbone}"  # Phase 9 Part A
     out.mkdir(parents=True, exist_ok=True)
     cache = out / "per_clip.csv"
     rows = [pd.read_csv(cache)] if cache.exists() else []
@@ -167,7 +169,7 @@ def face_term(lam):
             continue
         n = len(np.load(PIPE / clip / "detections.npz")["dets"])
         asg = {}
-        rows.append(pd.DataFrame(run_clip(clip, ci, gt, cfg, lam=lam, embs=face_embs(clip, n) if lam > 0 else None, assign_out=asg)))
+        rows.append(pd.DataFrame(run_clip(clip, ci, gt, cfg, lam=lam, embs=face_embs(clip, n, backbone) if lam > 0 else None, assign_out=asg)))
         (out / "tracks").mkdir(exist_ok=True)
         np.savez(out / "tracks" / f"{clip}.npz", **asg)
         pd.concat(rows, ignore_index=True).to_csv(cache, index=False, float_format="%.6f")
@@ -183,5 +185,7 @@ if __name__ == "__main__":
         exploratory(float(sys.argv[2]))
     elif len(sys.argv) == 3 and sys.argv[1] == "--lam":
         face_term(float(sys.argv[2]))
+    elif len(sys.argv) == 5 and sys.argv[1] == "--lam" and sys.argv[3] == "--backbone":
+        face_term(float(sys.argv[2]), sys.argv[4])  # Phase 9: --lam 0.5 --backbone webface4m
     else:
         main()

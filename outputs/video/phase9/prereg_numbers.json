@@ -1,0 +1,28 @@
+{
+ "at_px": {
+  "20": {
+   "coverage": 0.8422208281053952,
+   "error_kept_ms1mv2_r1": 0.4439478584729981
+  },
+  "21": {
+   "coverage": 0.7986198243412798,
+   "error_kept_ms1mv2_r1": 0.4230164964650432
+  },
+  "22": {
+   "coverage": 0.7694479297365119,
+   "error_kept_ms1mv2_r1": 0.4113330615572768
+  },
+  "23": {
+   "coverage": 0.7365119196988708,
+   "error_kept_ms1mv2_r1": 0.39480408858603067
+  },
+  "24": {
+   "coverage": 0.7089084065244667,
+   "error_kept_ms1mv2_r1": 0.3902654867256637
+  }
+ },
+ "median_mean_face_height_px": 33.444500000000005,
+ "n_tracklets": 3188,
+ "overall_error_ms1mv2_r1": 0.5053324968632371,
+ "p25_mean_face_height_px": 22.658
+}

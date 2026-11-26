@@ -1,0 +1,7 @@
+setting,fpir_target,n_tracklets,n_persons,false_positive_rate_mean_over_folds,model
+bar 48,0.30000,2,2,0.00000,adaface
+bar 48,0.10000,2,2,0.00000,adaface
+bar 48,0.01000,2,2,0.00000,adaface
+bar 64,0.30000,298,24,0.30201,adaface
+bar 64,0.10000,298,24,0.10738,adaface
+bar 64,0.01000,298,24,0.01477,adaface

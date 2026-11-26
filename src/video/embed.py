@@ -17,12 +17,16 @@ from src.stratify.measures import laplacian_variance, luminance  # noqa: E402
 
 
 class FaceEmbedder:
-    def __init__(self, cfg, recognizers=("adaface",), device="cuda"):
-        """cfg: the `recognizers` (name -> weight path), `preprocess` and `batch_size` entries of configs/video.yaml."""
+    def __init__(self, cfg, recognizers=("adaface",), device="cuda", quality=True):
+        """cfg: the `recognizers` (name -> weight path), `preprocess` and `batch_size` entries of configs/video.yaml.
+        An alias name (e.g. adaface_wf4m) takes its network from `recognizer_arch` and its flip from `recognizer_flip` (Phase 9).
+        quality=False skips the MagFace norm, luminance and Laplacian (used when they already exist for the same faces)."""
         pre, bs = cfg["preprocess"], cfg.get("batch_size", 128)
-        make = lambda n: Recognizer(n, ROOT / cfg["recognizers"][n], pre["input_size"], pre["interp"], pre["flip"], bs, device)  # noqa: E731
+        arch, flip = cfg.get("recognizer_arch", {}), cfg.get("recognizer_flip", {})
+        make = lambda n: Recognizer(arch.get(n, n), ROOT / cfg["recognizers"][n], pre["input_size"], pre["interp"], flip.get(n, pre["flip"]), bs, device)  # noqa: E731
         self.recs = {n: make(n) for n in recognizers}
-        self.mag = self.recs.get("magface") or make("magface")
+        self.quality = quality
+        self.mag = (self.recs.get("magface") or make("magface")) if quality else None
 
     @staticmethod
     def crops(bgr, kps):
@@ -36,6 +40,8 @@ class FaceEmbedder:
                 out["emb"][n], out["mag_norm"] = rec.get_embedding(crops, return_raw=True)
             else:
                 out["emb"][n] = rec.get_embedding(crops)
+        if not self.quality:
+            return out
         if "mag_norm" not in out:
             out["mag_norm"] = self.mag.get_embedding(crops, return_raw=True)[1]
         out["lum"] = np.array([luminance(c) for c in crops], np.float32)

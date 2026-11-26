@@ -96,12 +96,14 @@ def track_clip(cfg, out):
     return info
 
 
-def embed_clip(embedder, cfg, source, out, limit=None):
-    """Align and embed every detection with score >= pipeline.embed_floor (needs the frames again). Writes embed.npz."""
+def embed_clip(embedder, cfg, source, out, limit=None, name="embed"):
+    """Align and embed every detection with score >= pipeline.embed_floor (needs the frames again). Writes <name>.npz.
+    Phase 9: name="embed_webface4m" with a quality-free embedder writes only det_id and emb_<recognizer> (same det_id order as embed.npz)."""
     out = Path(out)
-    f = out / "embed.npz"
+    f = out / f"{name}.npz"
+    done = out / f"done_{name}.json"
     if f.exists():
-        return json.loads((out / "done_embed.json").read_text())
+        return json.loads(done.read_text())
     z = np.load(out / "detections.npz")
     fi, dets, kps = z["frame_idx"], z["dets"], z["kps"]
     sel = np.flatnonzero(dets[:, 4] >= cfg["pipeline"]["embed_floor"])
@@ -118,16 +120,17 @@ def embed_clip(embedder, cfg, source, out, limit=None):
         ids.extend(rows)
         for n in embs:
             embs[n].append(r["emb"][n])
-        mag.append(r["mag_norm"])
-        lum.append(r["lum"])
-        lap.append(r["lap_var"])
+        if embedder.quality:
+            mag.append(r["mag_norm"])
+            lum.append(r["lum"])
+            lap.append(r["lap_var"])
     sec = time.perf_counter() - t0
     cat = lambda xs, shape: np.concatenate(xs) if xs else np.zeros(shape, np.float32)  # noqa: E731
-    arrays = dict(det_id=np.array(ids, int), mag_norm=cat(mag, (0,)), lum=cat(lum, (0,)), lap_var=cat(lap, (0,)), seconds_embed=sec,
-                  **{f"emb_{n}": cat(v, (0, 512)) for n, v in embs.items()})
+    quality = dict(mag_norm=cat(mag, (0,)), lum=cat(lum, (0,)), lap_var=cat(lap, (0,))) if embedder.quality else {}
+    arrays = dict(det_id=np.array(ids, int), **quality, seconds_embed=sec, **{f"emb_{n}": cat(v, (0, 512)) for n, v in embs.items()})
     _atomic(f, lambda fh: np.savez(fh, **arrays))
     info = dict(n_embedded=len(ids), seconds_embed=sec, ms_per_face=1000 * sec / max(len(ids), 1))
-    _atomic(out / "done_embed.json", lambda fh: fh.write(json.dumps(info).encode()))
+    _atomic(done, lambda fh: fh.write(json.dumps(info).encode()))
     return info
 
 

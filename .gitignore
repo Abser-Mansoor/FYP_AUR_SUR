@@ -110,3 +110,12 @@ outputs/video/studyC/Abser/img/
 /outputs/video/mevid/*.log
 /outputs/video/mevid/*.err
 /outputs/video/mevid/*.cmd
+# Phase 9: run logs, launchers, markers; audit montages and demo videos (MEVID / MEVA images) stay local
+!/outputs/video/phase9/
+!/outputs/video/phase9_checks.json
+/outputs/video/phase9/*.log
+/outputs/video/phase9/*.cmd
+/outputs/video/phase9/*.done
+/outputs/video/phase9/demo/
+/outputs/video/mevid/audit/montages/
+*.mp4

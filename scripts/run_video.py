@@ -31,6 +31,8 @@ def main():
     ap.add_argument("--source", default=None, help="a folder of frames or a video file, run as one clip named after it")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--recognizers", nargs="+", default=None)
+    ap.add_argument("--embed-name", default="embed", help="output file stem of the embed stage; Phase 9: embed_webface4m with --recognizers adaface_wf4m --no-quality")
+    ap.add_argument("--no-quality", action="store_true", help="skip MagFace norm, luminance and Laplacian (they exist in embed.npz for the same faces)")
     a = ap.parse_args()
     cfg = yaml.safe_load(open(ROOT / a.config))
     ds = a.dataset + ("/_smoke" if a.limit else "")
@@ -54,8 +56,8 @@ def main():
         if a.stage in ("embed", "all"):
             if emb is None:
                 from src.video.embed import FaceEmbedder
-                emb = FaceEmbedder(cfg, tuple(a.recognizers or cfg["pipeline"]["recognizers"]))
-            msg["embed"] = P.embed_clip(emb, cfg, src, out, a.limit)
+                emb = FaceEmbedder(cfg, tuple(a.recognizers or cfg["pipeline"]["recognizers"]), quality=not a.no_quality)
+            msg["embed"] = P.embed_clip(emb, cfg, src, out, a.limit, a.embed_name)
         print(f"[{k}/{len(jobs)}] {clip}: {json.dumps({s: {kk: (round(v, 3) if isinstance(v, float) else v) for kk, v in m.items()} for s, m in msg.items()})}", flush=True)
     print(f"done in {time.perf_counter() - t_all:.0f} s")
 

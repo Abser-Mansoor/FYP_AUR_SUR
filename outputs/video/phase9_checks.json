@@ -1,0 +1,22 @@
+{
+ "check1_webface4m_recognizer_vs_phase8_features": {
+  "cosine_median": 0.9996527433395386,
+  "cosine_min": 0.9482802748680115,
+  "n_faces": 100,
+  "note": "src/recognizer.py with models/caface/adaface_ir101_webface4m.ckpt, flip off (configs/video.yaml recognizer_flip) vs the CAFace-backbone features of Phase 8 (scripts/video_caface.py --part mevid)",
+  "passed": false
+ },
+ "check4_quality_bar_unit_test": {
+  "cases_passed": true,
+  "n_random": 10000,
+  "passed": true,
+  "random_heights_withheld_iff_below_23px": true
+ },
+ "check5_faiss_flat_equals_exact_search": {
+  "note": "the Part E probes are checked again in scripts/phase9_retrieval.py",
+  "passed": true,
+  "synthetic_100": true,
+  "synthetic_1000": true,
+  "synthetic_10000": true
+ }
+}

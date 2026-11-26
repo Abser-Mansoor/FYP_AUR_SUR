@@ -55,6 +55,9 @@ recognizers:
   adaface: models/weights/adaface_ir101_ms1mv2.ckpt
   magface: models/weights/magface_iresnet100_MS1MV2.pth
   curricularface: models/weights/CurricularFace_Backbone.pth
+  adaface_wf4m: models/caface/adaface_ir101_webface4m.ckpt    # Phase 9 D4: AdaFace IR-101 trained on WebFace4M (standalone checkpoint, the CAFace backbone)
+recognizer_arch: {adaface_wf4m: adaface}   # network definition used for an alias (same IR-101 as the MS1MV2 checkpoint)
+recognizer_flip: {adaface_wf4m: false}     # Phase 9 D4: flip off, as the Phase 8 WebFace4M rows; the others keep `preprocess.flip`
 preprocess: {input_size: [112, 112], interp: bilinear, flip: true}
 batch_size: 128
 
@@ -78,3 +81,18 @@ ytf:
   score_floor: 0.5              # the embedding floor of the Phase 6 pipeline
   iou: 0.5                      # the subject = best-IoU detection with the labelled box, accepted from this IoU
   max_frames: 50                # evenly spaced among the labelled frames of a video
+
+# ---------------------------------------------------------------- Phase 9: final configuration (protocol: REPORT_phase9.md section 0; decisions D1-D6 of 2026-11-26)
+# Each switch can be set back to the Phase 6/7 value (in brackets) for acceptance check 2.
+final:
+  recognizer: adaface_wf4m      # D4 [adaface]
+  quality: magface              # q for R4* / R2: the MagFace (MS1MV2) raw norm
+  rule: "R4*"                   # D3 [R1]; R2 if the development fallback applies (section 0b)
+  tracker: bytetrack            # D1
+  face_lambda: 0.5              # D1 [0]
+  face_min_h: 32                # D1 gate: native box height (px); the score gate is pipeline.embed_floor (0.5)
+  bar_px: 23                    # D2 [0]: a track with mean usable-face height below this gets no identity ("low quality")
+  min_face_h: 16                # usable face (Phase 8 rule)
+  fpir: 0.1                     # D6
+  gallery_bar_px: 48            # MEVID gallery: front photos with a face of at least this height (Phase 8 M3)
+
