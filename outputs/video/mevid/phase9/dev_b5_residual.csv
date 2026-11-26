@@ -1,0 +1,5 @@
+dataset,signal,n_tracklets,n_persons,overall_error,auc,auc_random,auc_minus_random,ci_lo,ci_hi,bonf_lo,bonf_hi,exploratory,helps
+"MEVID development, kept by the 23 px bar",mean_magface_norm,1598,98,0.24406,0.09578,0.12203,-0.02625,-0.03343,-0.01925,-0.03578,-0.01721,False,True
+"MEVID development, kept by the 23 px bar",neg_yaw_proxy,1598,98,0.24406,0.10936,0.12203,-0.01266,-0.01908,-0.00518,-0.02131,-0.00369,False,True
+"MEVID development, kept by the 23 px bar",mean_laplacian_variance,1598,98,0.24406,0.11188,0.12203,-0.01015,-0.01733,-0.00316,-0.01916,-0.00135,False,True
+"MEVID development, kept by the 23 px bar",mean_face_height,1598,98,0.24406,0.10720,0.12203,-0.01483,-0.02146,-0.00843,-0.02288,-0.00738,False,True

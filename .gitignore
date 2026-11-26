@@ -119,3 +119,5 @@ outputs/video/studyC/Abser/img/
 /outputs/video/phase9/demo/
 /outputs/video/mevid/audit/montages/
 *.mp4
+# blind audit: the key is committed only after both label files exist
+/outputs/video/mevid/audit/key.csv

@@ -119,6 +119,34 @@ def check2():
                                                          default_embedder_identical_faces=int(sum(same)), n_faces=len(same), passed=bool(ha == hb and all(same))))
 
 
+def check3():
+    """The pipeline's identity stage (src/video/identify.py:track_template, used by scripts/video_demo.py) gives exactly the Part B template (src/video/aggregate.py rule) on 50 seeded cached tracklets."""
+    import mevid_errors as E
+    from src.video.identify import track_template
+    tr, frames, g = E.load()
+    rule = json.loads((E.P9 / "frozen_config.json").read_text())["config"]["rule"] if (E.P9 / "frozen_config.json").exists() else "R4*"
+    pick = np.random.default_rng(42).choice(len(tr), 50, replace=False)
+    same = [bool(np.array_equal(track_template(frames[t]["wf"], frames[t]["q"], frames[t]["idx"], rule), E.A.RULES[rule](frames[t]["wf"], frames[t]["q"], frames[t]["idx"]))) for t in tr.tracklet.to_numpy()[pick]]
+    return save("check3_pipeline_templates_equal_aggregate", dict(rule=rule, n_tracklets=len(same), identical=int(sum(same)), passed=bool(all(same))))
+
+
+def check6():
+    """Development and confirmation persons are disjoint; the section 0b commit (frozen_config.json) precedes the confirmation result files in git."""
+    import subprocess
+    import mevid_errors as E
+    tr, _, _ = E.load()
+    dev, conf = set(tr[tr.role == "dev"].person), set(tr[tr.role == "conf"].person)
+
+    def first_commit_time(path):
+        r = subprocess.run(["git", "log", "--diff-filter=A", "--format=%ct", "--", str(path)], cwd=ROOT, capture_output=True, text=True).stdout.split()
+        return int(r[-1]) if r else None
+    t0b, tconf = first_commit_time(E.P9 / "frozen_config.json"), first_commit_time(E.P9 / "conf_h1_h2.csv")
+    return save("check6_split_disjoint_and_0b_before_confirmation", dict(n_dev_persons=len(dev), n_conf_persons=len(conf), n_dev_tracklets=int((tr.role == "dev").sum()), n_conf_tracklets=int((tr.role == "conf").sum()),
+                                                                       disjoint=bool(not dev & conf), frozen_config_first_commit=t0b, confirmation_results_first_commit=tconf,
+                                                                       order_ok=(None if tconf is None else bool(t0b is not None and t0b < tconf)),
+                                                                       passed=bool(not dev & conf and t0b is not None and (tconf is None or t0b < tconf))))
+
+
 def check4():
     from src.video.identify import LOW, UNKNOWN, decide
     cases = [(22.99, 0.9, 7, 0.3, LOW), (23.0, 0.9, 7, 0.3, 7), (23.0, 0.2, 7, 0.3, UNKNOWN), (float("nan"), 0.9, 7, 0.3, LOW), (40.0, 0.3, 7, 0.3, 7), (5.0, 0.99, 7, 0.0, LOW)]
@@ -148,7 +176,7 @@ def check5():
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--check", required=True, choices=["1a", "1", "2", "4", "5"])
+    ap.add_argument("--check", required=True, choices=["1a", "1", "2", "3", "4", "5", "6"])
     a = ap.parse_args()
-    r = {"1a": check1a, "1": check1, "2": check2, "4": check4, "5": check5}[a.check]()
+    r = {"1a": check1a, "1": check1, "2": check2, "3": check3, "4": check4, "5": check5, "6": check6}[a.check]()
     sys.exit(0 if r.get("passed") else 1)

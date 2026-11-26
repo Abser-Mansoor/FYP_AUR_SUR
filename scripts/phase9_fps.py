@@ -72,7 +72,7 @@ def main():
     det = build_detector(cfg)
     rng = np.random.default_rng(42)
     gal = GalleryIndex(rng.normal(size=(170, 512)).astype(np.float32) / np.sqrt(512), "flat")  # timing only: the search cost does not depend on the values
-    clips = [line.split()[2] for line in (ROOT / "Dataset/MEVA/clips.txt").read_text().splitlines() if line.startswith("demo")]
+    clips = [line.split()[2] for line in (ROOT / "outputs/video/phase9/meva_clips.txt").read_text().splitlines() if line.startswith("demo")]
     # warm-up (CUDA kernels, cuDNN autotune)
     dummy = np.zeros((H, W, 3), np.uint8)
     for m in MODES:

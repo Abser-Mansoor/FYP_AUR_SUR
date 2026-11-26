@@ -1,10 +1,22 @@
 {
  "check1_webface4m_recognizer_vs_phase8_features": {
-  "cosine_median": 0.9996527433395386,
-  "cosine_min": 0.9482802748680115,
+  "crop_pixel_diff_max": 5,
+  "crop_pixel_diff_mean": 0.13432158801020408,
+  "envs_video_crops_cosine_median": 0.9996527433395386,
+  "envs_video_crops_cosine_min": 0.9482802748680115,
   "n_faces": 100,
-  "note": "src/recognizer.py with models/caface/adaface_ir101_webface4m.ckpt, flip off (configs/video.yaml recognizer_flip) vs the CAFace-backbone features of Phase 8 (scripts/video_caface.py --part mevid)",
-  "passed": false
+  "note": "network check on identical crops (section 0.7, amended before the section 0 commit); the OpenCV difference is why Phase 9 re-embeds WebFace4M in envs/video",
+  "opencv_envs_caface": "5.1.0",
+  "opencv_envs_video": "4.13.0",
+  "passed": true,
+  "same_crops_cosine_median": 0.9999998807907104,
+  "same_crops_cosine_min": 0.9999995231628418
+ },
+ "check3_pipeline_templates_equal_aggregate": {
+  "identical": 50,
+  "n_tracklets": 50,
+  "passed": true,
+  "rule": "R2"
  },
  "check4_quality_bar_unit_test": {
   "cases_passed": true,

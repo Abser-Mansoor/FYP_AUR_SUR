@@ -151,3 +151,23 @@ It also reports:
 - The MEVA demo clips come from the same actors and cameras as MEVID, and they have no identity labels.
 - ChokePoint is not held out.
 - TinyFace distractors are low-resolution crops, so the large-gallery retrieval table measures speed and approximation more than realistic confusion.
+
+## 0b. Frozen configuration (committed before the confirmation split is read)
+
+Computed on the development split only (2,297 tracklets of 99 train-split persons; `scripts/mevid_errors.py --stage dev` and `--stage combine`). Tables: `outputs/video/mevid/phase9/dev_*.csv`, `dev_summary.json`.
+
+- **D3 fallback applies.** With WebFace4M, R4* is below R2: Rank-1 0.6295 vs 0.6569, R4* − R2 = −0.0274 (95% CI −0.0405 to −0.0155). By the rule in 0.1, **R2 is the default rule**. With MS1MV2, R4* is still the best rule (0.4737 vs R2 0.4567, R1 0.4458), as in Phase 8: the advantage of R4* does not carry over to the stronger backbone.
+- **No fix is adopted** (Bonferroni CIs over F1–F4; 95% CI for F5). Paired differences to the default (WebFace4M R2, Rank-1 0.6569):
+  - F1 frame filter: −0.0122 (Bonferroni CI −0.0240 to −0.0004): worse.
+  - F2 resolution-matched gallery: +0.0070 (−0.0070 to +0.0207): no clear effect.
+  - F3 flip: −0.0044 (−0.0156 to +0.0061): no clear effect.
+  - F4 fusion with MS1MV2: −0.0610 (−0.0804 to −0.0425): worse. The speed condition is therefore not needed.
+  - F5 cohort normalisation, open-set TPIR1 at FPIR 0.1: 0.3725 vs 0.4945, −0.1219 (−0.1428 to −0.0870): worse.
+- **Frozen configuration** (`outputs/video/mevid/phase9/frozen_config.json`): AdaFace IR-101 WebFace4M, flip off, native gallery templates, rule R2 with the MagFace norm as weight, no frame filter, no fusion, no cohort normalisation, quality bar 23 px, FPIR 0.1. Demo threshold (mean of the 5 development-fold thresholds): 0.26899.
+- **Development numbers seen before this commit** (they do not change the configuration):
+  - error 34.3% overall;
+  - at 23 px, 1,598 of 2,297 tracklets kept, with 24.4% error among them;
+  - B5 on development: all four signals help within the kept tracklets; the MagFace norm most (area difference −0.0262, Bonferroni CI −0.0358 to −0.0172), face height −0.0148.
+- **Exploratory observation, not part of any test:** the mean detector score separates errors strongly in B2 (error 64.5% in its lowest quartile, 14.3% in its highest). It was not among the pre-registered B5 signals and is not used in Phase 9.
+- **Checks so far:** 1 (amended), 3, 4 and 5 pass (`outputs/video/phase9_checks.json`).
+- **Audit:** the 160-tracklet sheet (`outputs/video/mevid/audit/sheet.csv`) goes to two labelers now. The key stays out of git until both label files exist.

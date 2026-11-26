@@ -1,0 +1,17 @@
+{
+ "adopted_fixes": [],
+ "bar_px": 23.0,
+ "cohort_norm": false,
+ "config": {
+  "backbone": "wf",
+  "filt": false,
+  "flip": false,
+  "fusion": false,
+  "gallery": "native",
+  "rule": "R2"
+ },
+ "demo_threshold": 0.268985657683095,
+ "f4_fps_condition": null,
+ "fpir": 0.1,
+ "gallery_bar_px": 48
+}

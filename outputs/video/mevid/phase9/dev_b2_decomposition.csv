@@ -1,0 +1,45 @@
+factor,level,n,error
+mean face height (px),16-20,420,0.60000
+mean face height (px),20-24,349,0.46418
+mean face height (px),24-32,363,0.36364
+mean face height (px),32-48,549,0.25137
+mean face height (px),48-up,616,0.16883
+yaw proxy,"(0.0197, 0.229]",575,0.36522
+yaw proxy,"(0.229, 0.54]",574,0.28920
+yaw proxy,"(0.54, 1.595]",574,0.32404
+yaw proxy,"(1.595, 1602.05]",574,0.39373
+Laplacian variance,"(2.466, 16.967]",575,0.49043
+Laplacian variance,"(16.967, 30.545]",574,0.39895
+Laplacian variance,"(30.545, 62.598]",574,0.28223
+Laplacian variance,"(62.598, 831.882]",574,0.20035
+detector score,"(0.507, 0.63]",575,0.64522
+detector score,"(0.63, 0.685]",574,0.37805
+detector score,"(0.685, 0.738]",574,0.20557
+detector score,"(0.738, 0.875]",574,0.14286
+usable faces,"(4.999, 12.0]",578,0.55709
+usable faces,"(12.0, 24.0]",585,0.35726
+usable faces,"(24.0, 38.0]",571,0.24869
+usable faces,"(38.0, 50.0]",563,0.20426
+best gallery face height (px),"(193.373, 247.716]",585,0.30427
+best gallery face height (px),"(247.716, 279.559]",569,0.30931
+best gallery face height (px),"(279.559, 358.122]",594,0.34680
+best gallery face height (px),"(358.122, 809.866]",549,0.41530
+camera,299,136,0.44118
+camera,300,28,0.32143
+camera,326,131,0.11450
+camera,329,92,0.28261
+camera,330,126,0.38889
+camera,331,202,0.26238
+camera,339,80,0.83750
+camera,340,80,0.46250
+camera,341,4,0.50000
+camera,419,198,0.16667
+camera,420,355,0.29577
+camera,421,334,0.33234
+camera,423,18,0.16667
+camera,424,79,0.70886
+camera,505,59,0.10169
+camera,506,196,0.55612
+camera,508,170,0.27647
+camera,509,4,0.00000
+camera,638,5,0.00000
